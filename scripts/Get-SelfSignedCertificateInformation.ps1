@@ -1,4 +1,4 @@
-﻿$certPath = Read-Host "Enter certificate path (.cer)"
+﻿$certPath = Resolve-Path ".\FiveP.com.au.cer"
 $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
 $cert.Import($certPath)
 $rawCert = $cert.GetRawCertData()
@@ -18,5 +18,6 @@ $keyCredentials =
      }
   ],'
 $keyCredentials
-
+$keyCredentials | Out-File "./thumb.txt" -Append:$false -Force -Encoding string
+ ("Certificate Thumbprint: $($cert.Thumbprint)")| Out-File "./thumb.txt" -Append:$true -Force -Encoding string
 Write-Host "Certificate Thumbprint:" $cert.Thumbprint
