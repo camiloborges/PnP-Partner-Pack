@@ -28,8 +28,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OfficeDevPnP.PartnerPack.Ex
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{17065892-0FA9-4BBE-85CF-14C3D0BC9C3C}"
 	ProjectSection(SolutionItems) = preProject
+		..\scripts\config.ps1 = ..\scripts\config.ps1
 		..\scripts\Configure-Configs.ps1 = ..\scripts\Configure-Configs.ps1
+		..\scripts\Create-AppService.ps1 = ..\scripts\Create-AppService.ps1
+		..\scripts\Create-InfrastructureSiteCollection.ps1 = ..\scripts\Create-InfrastructureSiteCollection.ps1
 		..\scripts\Create-SelfSignedCertificate.ps1 = ..\scripts\Create-SelfSignedCertificate.ps1
+		..\scripts\Create-StorageAccount.ps1 = ..\scripts\Create-StorageAccount.ps1
+		..\scripts\Do-ItAll.ps1 = ..\scripts\Do-ItAll.ps1
 		..\scripts\Get-SelfSignedCertificateInformation.ps1 = ..\scripts\Get-SelfSignedCertificateInformation.ps1
 		..\scripts\Provision-GovernanceTimerJobs.ps1 = ..\scripts\Provision-GovernanceTimerJobs.ps1
 		..\scripts\Provision-InfrastructureSiteArtifacts.ps1 = ..\scripts\Provision-InfrastructureSiteArtifacts.ps1
