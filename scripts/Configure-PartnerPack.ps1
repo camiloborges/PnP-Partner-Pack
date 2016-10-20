@@ -64,7 +64,7 @@ $azureADApplication =  .\Create-AzureADApplication.ps1 -ApplicationServiceName $
                                                             -Tenant $config.Tenant 
 
 write-host "Azure AD Application added, creating infrastructure site" -ForegroundColor yellow 
-./Create-InfrastructureSiteCollection.ps1 .\config.ps1 -Tenant $config.Tenant `
+./Create-InfrastructureSiteCollection.ps1   -Tenant $config.Tenant `
                                             -Owner $config.InfrastructureOwner `
                                             -AzureService $config.AppServiceName `
                                             -InfrastructureSiteUrl $config.InfrastructureSiteUrl
