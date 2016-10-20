@@ -48,7 +48,7 @@ $certificateInfo =  ./Get-SelfSignedCertificateInformation.ps1 -CertificateFile 
 
 write-host "Certificate created, creating storage." -ForegroundColor Yellow
 $storageKeys = ./Create-StorageAccount.ps1 -name $config.StorageAccountName -ResourceGroupName  $config.ResourceGroupName -location $config.Location -SubscriptionName $config.SubscriptionName
-
+$config.StorageAccountName = $storageKeys.StorageAccountName
 Write-host "Storage Account created, creating app service " -ForegroundColor Yellow
 $appCertificate = ./Create-AppService.ps1  -Location $config.Location `
                             -Name  $config.AppServiceName `
@@ -64,7 +64,7 @@ $azureADApplication =  .\Create-AzureADApplication.ps1 -ApplicationServiceName $
                                                             -Tenant $config.Tenant 
 
 write-host "Azure AD Application added, creating infrastructure site" -ForegroundColor yellow 
-./Create-InfrastructureSiteCollection.ps1 .\config.ps1-Tenant $config.Tenant `
+./Create-InfrastructureSiteCollection.ps1 .\config.ps1 -Tenant $config.Tenant `
                                             -Owner $config.InfrastructureOwner `
                                             -AzureService $config.AppServiceName `
                                             -InfrastructureSiteUrl $config.InfrastructureSiteUrl
