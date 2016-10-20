@@ -71,16 +71,16 @@ if($folder -eq $null)
 $folder= $packageName
 }
 # Check if the required release files are present
-$files = Get-ChildItem "$basePath\OfficeDevPnP.PartnerPack.$packageName\bin\$Build" -ErrorAction SilentlyContinue
+$files = Get-ChildItem "$basePath\OfficeDevPnP.PartnerPack.$folder\bin\$Build" -ErrorAction SilentlyContinue
 if($files -ne $null -and $files.Length -gt 0)
 {
     # Pack the files into a ZIP file
-    $zipFile = Get-ChildItem "$basePath\OfficeDevPnP.PartnerPack.$packageName\$packageName.zip" -ErrorAction SilentlyContinue
+    $zipFile = Get-ChildItem "$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip" -ErrorAction SilentlyContinue
     if($zipFile -ne $null)
     {
-        Remove-Item "$basePath\OfficeDevPnP.PartnerPack.$packageName\$packageName.zip"
+        Remove-Item "$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip"
     }
-    [IO.Compression.ZipFile]::CreateFromDirectory("$basePath\OfficeDevPnP.PartnerPack.$packageName\bin\$Build","$basePath\OfficeDevPnP.PartnerPack.$packageName\$packageName.zip");
+    [IO.Compression.ZipFile]::CreateFromDirectory("$basePath\OfficeDevPnP.PartnerPack.$folder\bin\$Build","$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip");
     UploadJob "$packageName" "$basePath\OfficeDevPnP.PartnerPack.$packageName\$packageName.zip"
 } else {
     Write-Host -ForegroundColor Cyan "No build files available. Please configure and build the solution first."
