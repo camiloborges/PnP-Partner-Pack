@@ -1,6 +1,6 @@
 # PnP Partner Pack - Scripted Setup Guide
 
-This document describes the deployment for the **PnP Partner Pack version 2.0 (September 2016)**.
+This document describes the scripted deployment for the **PnP Partner Pack version 2.0 (September 2016)**.
 Follow step by step the detailed instructions provided in this document, if you like to automate most of the steps to setup the PnP Partner Pack version 2.0.
 
 Otherwise, you will also be able to use a UI based desktop Setup application (for Windows OS only) that will be released pretty soon, and which allows you to fully automate the setup process.
