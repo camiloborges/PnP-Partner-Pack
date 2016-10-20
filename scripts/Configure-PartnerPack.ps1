@@ -39,7 +39,6 @@ Login-AzureRmAccount -Credential $cred
 write-host "authenticated, creating resource group" -ForegroundColor Yellow
 ./Create-ResourceGroup.ps1 -name $config.ResourceGroupName -Location $config.Location 
 
-
 write-host "resource group created, creating certificate" -ForegroundColor Yellow
 if(-not (Test-PAth "./$($config.CertificateCommonName).pfx" ) -or -not (Test-PAth "./$($config.CertificateCommonName).pfx" )){
     ./Create-SelfSignedCertificate.ps1 -CommonName $config.CertificateCommonName -StartDate (get-date).AddDays(-1) -EndDate (get-date).AddYears(5) -Password $config.CertificatePassword

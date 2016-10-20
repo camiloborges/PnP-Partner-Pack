@@ -55,7 +55,10 @@ if($null -eq $app -or $app.Count -eq 0){
         write-error "Problems creating App Service Instance." -Exception $_.Exception 
         break;
     }
-}else {if($app.ResourceGroup -ne $ResourceGroupName){    write-error "Application Already exists, but in a different resource group. Stopping now" 
+}else {
+if($app.ResourceGroup -ne $ResourceGroupName)
+{
+    write-error "Application Already exists, but in a different resource group. Stopping now" 
     break;
 }elseif($app.Count -gt 1){
     write-error "Multiple Applications found with the same name. Stopping now" 
@@ -81,6 +84,7 @@ write-host $PlainTextPassword
 
 try{
     ### from https://github.com/Azure/azure-powershell/issues/2108
+    ## this is a bit of a hacky way of achieving the outcome, but it does work.
     New-AzureRmWebAppSSLBinding -ResourceGroupName $ResourceGroupName  `
                                 -WebAppName $Name -CertificateFilePath  $pfxPath  `
                                 -CertificatePassword $PlainTextPassword  `
