@@ -1,14 +1,4 @@
-# PnP Partner Pack - Manual Setup Guide
-
-## Solution Overview
-The PnP Partner Pack allows you to extend the out of the box experience of Microsoft Office 365 and Microsoft SharePoint Online by providing the following capabilities:
-* **Save Site as Provisioning Template** feature in Site Settings
-* **Sub-Site creation**  with custom UI and PnP Provisioning Template selection
-* **Site Collection creation for non-admin users** with custom UI and PnP Provisioning Template selection
-* **My Site Collections** personal view
-* **Responsive Design** template for Site Collections
-* **Governance** tools for administrators: apply SharePoint farm-wide branding, refresh site templates, bulk creation of site collections 
-* **Sample Timer Jobs** (implemented as WebJobs) for Governance rules enforcement
+# PnP Partner Pack - Scripted Setup Guide
 
 This document describes the deployment for the **PnP Partner Pack version 2.0 (September 2016)**.
 Follow step by step the detailed instructions provided in this document, if you like to automate most of the steps to setup the PnP Partner Pack version 2.0.
@@ -33,18 +23,7 @@ In order to setup the PnP Partner Pack you need:
 *  **Azure Active Directory PowerShell Module - Version 2 *** (information here: https://msdn.microsoft.com/en-us/library/azure/mt757189.aspx) 
 *  **Azure and Azure Resource Manager PowerShell Modules *** (information here: http://go.microsoft.com/fwlink/p/?LinkID=320552).
 
-The scripted installation accomplishes the following steps:
-* Azure Active Directory Application registration, as Office 365 Application
-* Create the self-signed certificate
-* App Only certificate configuration in the Azure AD Application
-* Infrastructural Site Collection provisioning
-* Azure Blob Storage creation (if no default storage is found)
-* Azure App Service provisioning and configuration
-* App Only certificate configuration in the Azure Web App
-* Azure Web Jobs provisioning and scheduling
-
-The following manual step is required after script has been completed.
-During the setup guide you will often find two suitable alternatives to achieve your goal. The first option will be to use some ready to go PowerShell scripts, which is the preferred solution. Alternatively if you rather prefer to setup everything manually you will find some detailed manual steps.
+The scripted installation performs most of the steps required in order to deploy the Partner Pack Solution, however there is 1 manual step required after script has been completed.
 * [Azure Active Directory Application API Access Required](#azureadapiaccess)
 
 ## Installation Steps
@@ -52,12 +31,10 @@ During the setup guide you will often find two suitable alternatives to achieve 
 * [Execute Configure-PartnerPack.ps1](#partnerpackscript)
 * [Configure Azure AD Application API Permissions](#aad-apipermissions)
 
-
-
 <a name="configfile"></a> 
-### [Update config.ps1
+### Update config.ps1
 Config.ps1 file sets up a hash table with all the properties that are required. You need to configure it to your liking. 
-Browse to the Scripts folder and update the hash table 
+Browse to the Scripts folder and update the hash table there is within it. 
 
 <a name="partnerpackscript"></a>
 ### Execute Configure-PartnerPack.ps1
@@ -85,8 +62,8 @@ On top of the changes above mentione the config files of all solution are expect
 <a name="aad-apipermissions"></a>
 ### Configure Azure AD Application API Permissions
 - Go to [Azure management portal](http://portal.azure.com) (portal.azure.com)
-- authenticate using your highly privileged account
-- navigate to Azure Active Directory
+- Authenticate using your highly privileged account
+- Navigate to Azure Active Directory
 - Click App registrations. 
 - Find your newly created application and click on it 
 - Click Required permissions 
