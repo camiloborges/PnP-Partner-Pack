@@ -91,10 +91,6 @@ if($files -ne $null -and $files.Length -gt 0)
 $basePath = "$(convert-path ..)\OfficeDevPnP.PartnerPack.SiteProvisioning"
 
 
-$packageName = "EnforceAdminsJob"
-$folder ="OfficeDevPnP.PartnerPack.CheckAdminsJob"
-
-
 DeployJob "EnforceAdminsJob" "CheckAdminsJob"
 DeployJob "ExternalUsersJob"
 DeployJob "ScheduledJob" 
