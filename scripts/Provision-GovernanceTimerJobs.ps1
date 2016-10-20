@@ -81,7 +81,7 @@ if($files -ne $null -and $files.Length -gt 0)
         Remove-Item "$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip"
     }
     [IO.Compression.ZipFile]::CreateFromDirectory("$basePath\OfficeDevPnP.PartnerPack.$folder\bin\$Build","$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip");
-    UploadJob "$packageName" "$basePath\OfficeDevPnP.PartnerPack.$packageName\$packageName.zip"
+    UploadJob "$packageName" "$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip"
 } else {
     Write-Host -ForegroundColor Cyan "No build files available. Please configure and build the solution first."
 }
