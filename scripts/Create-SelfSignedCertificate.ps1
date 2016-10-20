@@ -135,6 +135,8 @@ function RemoveCertsFromStore()
 
 if(CreateSelfSignedCertificate)
 {
+   # RemoveCertsFromStore
     ExportPFXFile
-    RemoveCertsFromStore
+    #// remove certs from store prevents testing locally as partner pack code retrieves cert from store
+   # RemoveCertsFromStore
 }

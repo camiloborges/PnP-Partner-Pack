@@ -74,8 +74,13 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs.Handlers
                         newSite.UserCodeWarningLevel = job.UserCodeWarningLevel;
 
                         // Create the Site Collection and wait for its creation (we're asynchronous)
+                        
                         var tenant = new Tenant(adminContext);
-                        tenant.CreateSiteCollection(newSite, true, true); // TODO: Do we want to empty Recycle Bin?
+                        var status = "";
+                        if (tenant.CheckIfSiteExists(siteUrl,status) == false)
+                        {
+                            tenant.CreateSiteCollection(newSite, true, true); // TODO: Do we want to empty Recycle Bin?
+                        }
 
                         Site site = tenant.GetSiteByUrl(siteUrl);
                         Web web = site.RootWeb;
