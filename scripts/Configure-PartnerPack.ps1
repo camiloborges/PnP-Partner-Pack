@@ -79,7 +79,7 @@ write-host "preparing config files" -ForegroundColor Yellow
                             -InfrastructureSiteUrl $config.InfrastructureSiteUrl
 
 write-host "config files set up, deploying governance timer jobs" -ForegroundColor Yellow
-.\Provision-GovernanceTimerJobs.ps1 -Location $config.Location -AzureWebSite $config.AppServiceName                    
+.\Provision-GovernanceTimerJobs.ps1 -Location $config.Location -AzureWebSite $config.AppServiceName     |Out-null               
 
 
 write-host "Scripted configuration completed. You need to configure the required API permissions within Azure AD for Application $($config.AppServiceName) " -ForegroundColor Yellow

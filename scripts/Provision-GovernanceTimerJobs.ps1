@@ -52,23 +52,21 @@ function UploadJob($jobName,$jobFile)
     {
         $jobCollection = New-AzureSchedulerJobCollection -Location $Location -JobCollectionName $JobCollectionName;
     }
-
     $authPair = "$($site.PublishingUsername):$($site.PublishingPassword)";
     $pairBytes = [System.Text.Encoding]::UTF8.GetBytes($authPair);
     $encodedPair = [System.Convert]::ToBase64String($pairBytes);
     $schedulerJob = Get-AzureSchedulerJob -Location $Location -JobCollectionName $jobCollectionName -JobName $jobName -ErrorAction SilentlyContinue
     if($schedulerJob -ne $null)
     {
-        Remove-AzureSchedulerJob -Location $Location -JobCollectionName $jobCollectionName -JobName $jobName -Force
+        Remove-AzureSchedulerJob -Location $Location -JobCollectionName $jobCollectionName -JobName $jobName -Force | Out-Null
     }
-    #New-AzureSchedulerHttpJob -JobCollectionName $jobCollectionName -JobName $jobName -Method POST -URI "$($job.Url)\run" -Location $Location -StartTime $StartDateAndTime -Interval 1 -Frequency Day -Headers @{ "Content-Type" = "text/plain"; "Authorization" = "Basic $encodedPair"; };
-    New-AzureSchedulerHttpJob -JobCollectionName $jobCollectionName -JobName $jobName -Method POST -URI "$($job.Url)\run" -Location $Location -StartTime $StartDateAndTime -Interval 1 -Frequency Day
+    New-AzureSchedulerHttpJob -JobCollectionName $jobCollectionName -JobName $jobName -Method POST -URI "$($job.Url)\run" -Location $Location -StartTime $StartDateAndTime -Interval 1 -Frequency Day |Out-Null
 }
 function DeployJob($packageName, $folder)
 {
 if($folder -eq $null)
 {
-$folder= $packageName
+    $folder= $packageName
 }
 # Check if the required release files are present
 $files = Get-ChildItem "$basePath\OfficeDevPnP.PartnerPack.$folder\bin\$Build" -ErrorAction SilentlyContinue
