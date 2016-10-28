@@ -12,6 +12,10 @@ namespace OfficeDevPnP.PartnerPack.ScheduledJob
     {
         static void Main()
         {
+            System.Threading.Thread.Sleep(20 * 1000);
+#if DEBUG
+//            System.Threading.Thread.Sleep(45 * 1000);
+#endif
             var job = new PnPPartnerPackProvisioningJob();
             job.UseThreading = false;
 
@@ -24,7 +28,7 @@ namespace OfficeDevPnP.PartnerPack.ScheduledJob
 
             job.Run();
 
-#if DEBUG
+#if DEBUGLOCAL
             Console.ReadLine();
 #endif
         }

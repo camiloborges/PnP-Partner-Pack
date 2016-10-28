@@ -17,61 +17,116 @@ This will load the configuration from a custom-config.ps1 file, prompt user for 
 #>
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory = $true, HelpMessage="User account to be used by process.")]
-    $userName,
+    [Parameter(Mandatory = $false, HelpMessage="User account to be used by process.")]
+    $userName=(Read-Host "Please type in the user account you want to use" ),
     [Parameter(Mandatory = $false, HelpMessage="Account Password for account to be used by process.")]
     $securePassword = (Read-Host "Password" -AsSecureString),
     [Parameter(Mandatory = $false, HelpMessage="Configuration Script. This holds all the parameters required by the solution.")]
     $config = (./config.ps1 )
 )
-
-if($config.ApplicationIdentifierUri -eq $null)
+function Init-Session
 {
-    $config.ApplicationIdentifierUri = "https://$($config.Tenant).onmicrosoft.com/$($config.AppServiceName).azurewebsites.net".ToLower()
+    write-host "Authenticating using 3 different methods, Add-AzureAccount, Connect-AzureAD and Login-AzureRMAccount" -ForegroundColor Yellow
+    $cred = New-Object System.Management.Automation.PSCredential($userName, $securePassword)
+    try{
+        Add-AzureAccount -Credential $cred | Out-Null
+        Connect-AzureAD -Credential $cred | Out-Null
+        Login-AzureRmAccount -Credential $cred | Out-Null
+    }catch {
+        write-error "Couldn't authenticate to Azure." -ForegroundColor red
+        throw
+    }
+    write-host "authenticated, now collecting some of the required values" -ForegroundColor Yellow
+
+    $config.Tenant = (./Confirm-ParameterValue.ps1 -prompt "Confirm your Office 365 Tenant name" -value $config.Tenant)
+    if($config.Tenant.Contains(".")){
+        $config.Tenant =$config.Tenant.Substring(0, $config.Tenant.IndexOf(".") )
+    }
+    $subscriptions = Get-AzureRmSubscription | ForEach-Object{ $_.SubscriptionName} 
+    $locations = GEt-AzureRMLocation | ForEach-Object {$_.DisplayName}
+    $config.SubscriptionName = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Subscription you'll use" -value $config.SubscriptionName -options $subscriptions)
+    $config.Location = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Location you'll are " -value $config.Location -options $locations)
+
+    while($null -eq (Get-AzureRmSubscription -SubscriptionName $config.SubscriptionName -ErrorAction SilentlyContinue))
+    {
+        write-host "couldn't find a subscription with the name you provided."
+        $config.SubscriptionName = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Subscription you'll deploy this to" -value $config.SubscriptionName)
+    }
+
+    select-azuresubscription -SubscriptionName $config.SubscriptionName
 }
-
-write-host "Authenticating using 3 different methods, Add-AzureAccount, Connect-AzureAD and Login-AzureRMAccount" -ForegroundColor Yellow
-$cred = New-Object System.Management.Automation.PSCredential($userName, $securePassword)
-Add-AzureAccount -Credential $cred
-Connect-AzureAD -Credential $cred
-Login-AzureRmAccount -Credential $cred
-
-write-host "authenticated, creating resource group" -ForegroundColor Yellow
-./Create-ResourceGroup.ps1 -name $config.ResourceGroupName -Location $config.Location 
-
-write-host "resource group created, creating certificate" -ForegroundColor Yellow
-if(-not (Test-PAth "./$($config.CertificateCommonName).pfx" ) -or -not (Test-PAth "./$($config.CertificateCommonName).pfx" )){
-    ./Create-SelfSignedCertificate.ps1 -CommonName $config.CertificateCommonName -StartDate (get-date).AddDays(-1) -EndDate (get-date).AddYears(5) -Password $config.CertificatePassword
+function Create-StorageAccount{
+    $storage =  ./Create-StorageAccount.ps1 -name $config.StorageAccountName -ResourceGroupName  $config.ResourceGroupName -Location $config.Location -SubscriptionName $config.SubscriptionName -Sku $config.StorageAccountSku
+    $config.StorageAccountName = $storage.Name
+    $config.StorageAccountSku = $storage.Sku
+    $config.StorageAccountKey = $storage.Key
 }
+function Create-AppService
+{
+    Write-host "creating app service plan" -ForegroundColor Yellow
+    $plan= ./Create-AppServicePlan.ps1  -Location $config.Location `
+                                        -Name  $config.AppServicePlanName `
+                                        -ResourceGroupName $config.ResourceGroupName `
+                                        -AppServiceTier $config.AppServiceTier 
+    $config.AppServicePlanName = $plan.Name
+    $config.AppServiceTier = $plan.Tier
 
-$certificateInfo =  ./Get-SelfSignedCertificateInformation.ps1 -CertificateFile $config.CertificateCommonName  #-AppClientId $config.AppClientId
-
-write-host "Certificate created, creating storage." -ForegroundColor Yellow
-$storageKeys = ./Create-StorageAccount.ps1 -name $config.StorageAccountName -ResourceGroupName  $config.ResourceGroupName -location $config.Location -SubscriptionName $config.SubscriptionName
-$config.StorageAccountName = $storageKeys.StorageAccountName
-Write-host "Storage Account created, creating app service " -ForegroundColor Yellow
-$appCertificate = ./Create-AppService.ps1  -Location $config.Location `
-                            -Name  $config.AppServiceName `
-                            -ServicePlan $config.AppServicePlanName `
-                            -ResourceGroupName $config.ResourceGroupName `
-                            -AppServiceTier $config.AppServiceTier `
-                            -CertificateCommonName $config.CertificateCommonName `
-                            -CertificateFile $config.CertificateCommonName -CertificatePassword $config.CertificatePassword -CertificateThumbprint $certificateInfo.CertificateThumbprint
-Write-host "App Service Created. Registering Azure AD Application" -ForegroundColor Yellow
-$azureADApplication =  .\Create-AzureADApplication.ps1 -ApplicationServiceName $config.AppServiceName `
+    Write-host "creating app service " -ForegroundColor Yellow
+    $appCertificate = ./Create-AppService.ps1  -Location $config.Location `
+                                -Name  $config.AppServiceName `
+                                -ServicePlan $config.AppServicePlanName `
+                                -ResourceGroupName $config.ResourceGroupName `
+                                -CertificateCommonName $config.CertificateCommonName `
+                                -CertificateFile $config.CertificateCommonName `
+                                -CertificatePassword $config.CertificatePassword `                                -CertificateThumbprint $config.CertificateThumbprint
+}
+function Create-AzureADApplication
+{
+    if($config.ApplicationIdentifierUri -eq $null)
+    {
+        $config.ApplicationIdentifierUri = "https://$($config.Tenant).onmicrosoft.com/$($config.AppServiceName).azurewebsites.net".ToLower()
+    }
+    $config.ApplicationIdentifierUri = (./Confirm-ParameterValue.ps1 -prompt "Confirm Azure AD Application Identifier Uri" -value $config.ApplicationIdentifierUri).ToLower()
+    $azureADApplication =  .\Create-AzureADApplication.ps1 -ApplicationServiceName $config.AppServiceName `
                                                             -ApplicationIdentifierUri $config.ApplicationIdentifierUri `
                                                             -CertificateFile $config.CertificateCommonName `
                                                             -Tenant $config.Tenant 
+}
+function Create-InfrastructureSiteCollection 
+{
+    $config.InfrastructureSiteOwner = ./Confirm-ParameterValue.ps1 -prompt "Confirm Infrastructure Site Collection owner" -value $username 
+    $config.InfrastructureSiteUrl = ./Confirm-ParameterValue.ps1 -prompt "Confirm Infrastructure Site Collection Url" -value $config.InfrastructureSiteUrl
+    $office365Creds =  New-Object System.Management.Automation.PSCredential($UserName,$securePassword);
+    ./Create-InfrastructureSiteCollection.ps1 -Tenant $config.Tenant `
+                                                -Owner $config.InfrastructureSiteOwner `
+                                                -AzureService $config.AppServiceName `
+                                                -InfrastructureSiteUrl $config.InfrastructureSiteUrl `
+                                                -Credentials  $office365Creds
+}
+function Create-SelfSignedCertificate
+{
+    $config.CertificateCommonName = ./Confirm-ParameterValue.ps1 -prompt "Confirm your Certificate common name" -value $config.CertificateCommonName
+    $config.CertificatePassword = ./Confirm-ParameterValue.ps1 -prompt "Confirm your Certificate Password" -value $config.CertificatePassword
 
-write-host "Azure AD Application added, creating infrastructure site" -ForegroundColor yellow 
-./Create-InfrastructureSiteCollection.ps1 -Tenant $config.Tenant `
-                                            -Owner $config.InfrastructureOwner `
-                                            -AzureService $config.AppServiceName `
-                                            -InfrastructureSiteUrl $config.InfrastructureSiteUrl
+    if(-not (Test-PAth "./$($config.CertificateCommonName).pfx" ) -or -not (Test-PAth "./$($config.CertificateCommonName).pfx" )){
+        $certificate = ./Create-SelfSignedCertificate.ps1 -CommonName $config.CertificateCommonName -StartDate (get-date).AddDays(-1) -EndDate (get-date).AddYears(5) -Password $config.CertificatePassword
+    }
+    $certificateInfo =  ./Get-SelfSignedCertificateInformation.ps1 -CertificateFile $config.CertificateCommonName  
+    $config.CertificateThumbprint = $certificateInfo.CertificateThumbprint
+}
+Init-Session
+
+$config.ResourceGroupName = ./Create-ResourceGroup.ps1 -name $config.ResourceGroupName -Location $config.Location 
+
+Create-SelfSignedCertificate
+Create-StorageAccount 
+Create-AppService
+Create-AzureADApplication 
+Create-InfrastructureSiteCollection 
 
 write-host "preparing config files" -ForegroundColor Yellow
 .\Configure-Configs.ps1    -AzureStorageAccountName $config.StorageAccountName `
-                            -AzureStoragePrimaryAccessKey $storageKeys.Primary `
+                            -AzureStoragePrimaryAccessKey $storage.Key `
                             -ClientId $azureADApplication.ApplicationId.Guid.ToString()  `
                             -ClientSecret $config.AppClientSecret `
                             -ADTenant "$($config.Tenant).onmicrosoft.com" `
@@ -81,10 +136,7 @@ write-host "preparing config files" -ForegroundColor Yellow
 write-host "config files set up, deploying governance timer jobs" -ForegroundColor Yellow
 .\Provision-GovernanceTimerJobs.ps1 -Location $config.Location -AzureWebSite $config.AppServiceName     |Out-null               
 
-
 write-host "Scripted configuration completed. You need to configure the required API permissions within Azure AD for Application $($config.AppServiceName) " -ForegroundColor Yellow
 write-host "You might need to see what was the final configuration values, so here you go." 
 write-host ($config |ConvertTo-Json) -ForegroundColor Cyan  
-
-
 break

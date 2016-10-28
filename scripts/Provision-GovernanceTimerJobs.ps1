@@ -42,27 +42,29 @@ if($null -eq (Get-AzureAccount -EA 0)){
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-function UploadJob($jobName,$jobFile)
+function UploadJob($jobName,$jobFile, $jobType = "Triggered")
 {
     Write-Host -ForegroundColor Yellow "Uploading $jobName"
     $site = Get-AzureWebsite -Name $AzureWebSite
-    $job = $site | New-AzureWebsiteJob -JobName $jobName -JobType Triggered -JobFile $jobFile
-    $jobCollection = Get-AzureSchedulerJobCollection -Location $Location -JobCollectionName $JobCollectionName -ErrorAction SilentlyContinue
-    if($jobCollection -eq $null)
-    {
-        $jobCollection = New-AzureSchedulerJobCollection -Location $Location -JobCollectionName $JobCollectionName;
-    }
-    $authPair = "$($site.PublishingUsername):$($site.PublishingPassword)";
-    $pairBytes = [System.Text.Encoding]::UTF8.GetBytes($authPair);
-    $encodedPair = [System.Convert]::ToBase64String($pairBytes);
-    $schedulerJob = Get-AzureSchedulerJob -Location $Location -JobCollectionName $jobCollectionName -JobName $jobName -ErrorAction SilentlyContinue
-    if($schedulerJob -ne $null)
-    {
-        Remove-AzureSchedulerJob -Location $Location -JobCollectionName $jobCollectionName -JobName $jobName -Force | Out-Null
-    }
-    New-AzureSchedulerHttpJob -JobCollectionName $jobCollectionName -JobName $jobName -Method POST -URI "$($job.Url)\run" -Location $Location -StartTime $StartDateAndTime -Interval 1 -Frequency Day |Out-Null
+    $job = $site | New-AzureWebsiteJob -JobName $jobName -JobType $jobType  -JobFile $jobFile
+    if($jobType = "Triggered"){
+        $jobCollection = Get-AzureSchedulerJobCollection -Location $Location -JobCollectionName $JobCollectionName -ErrorAction SilentlyContinue
+        if($jobCollection -eq $null)
+        {
+            $jobCollection = New-AzureSchedulerJobCollection -Location $Location -JobCollectionName $JobCollectionName;
+        }
+        $authPair = "$($site.PublishingUsername):$($site.PublishingPassword)";
+        $pairBytes = [System.Text.Encoding]::UTF8.GetBytes($authPair);
+        $encodedPair = [System.Convert]::ToBase64String($pairBytes);
+        $schedulerJob = Get-AzureSchedulerJob -Location $Location -JobCollectionName $jobCollectionName -JobName $jobName -ErrorAction SilentlyContinue
+        if($schedulerJob -ne $null)
+        {
+            Remove-AzureSchedulerJob -Location $Location -JobCollectionName $jobCollectionName -JobName $jobName -Force | Out-Null
+        }
+        New-AzureSchedulerHttpJob -JobCollectionName $jobCollectionName -JobName $jobName -Method POST -URI "$($job.Url)\run" -Location $Location -StartTime $StartDateAndTime -Interval 1 -Frequency Day |Out-Null
+        }
 }
-function DeployJob($packageName, $folder)
+function DeployJob($packageName, $folder, $jobType="Triggered")
 {
 if($folder -eq $null)
 {
@@ -79,7 +81,7 @@ if($files -ne $null -and $files.Length -gt 0)
         Remove-Item "$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip"
     }
     [IO.Compression.ZipFile]::CreateFromDirectory("$basePath\OfficeDevPnP.PartnerPack.$folder\bin\$Build","$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip");
-    UploadJob "$packageName" "$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip"
+    UploadJob "$packageName" "$basePath\OfficeDevPnP.PartnerPack.$folder\$packageName.zip" -jobType $jobType
 } else {
     Write-Host -ForegroundColor Cyan "No build files available. Please configure and build the solution first."
 }
@@ -92,4 +94,4 @@ $basePath = "$(convert-path ..)\OfficeDevPnP.PartnerPack.SiteProvisioning"
 DeployJob "EnforceAdminsJob" "CheckAdminsJob"
 DeployJob "ExternalUsersJob"
 DeployJob "ScheduledJob" 
-
+DeployJob "ContinuousJob" -jobType "Continuous"

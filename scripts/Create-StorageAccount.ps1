@@ -10,32 +10,49 @@ PS C:\> .\Create-StorageAccount.ps1  -name "AzureStorageAccount" -ResourceGroupN
 
 This will create a storage account "AzureStorageAccount" and associate it as the default storage account for subscription contoso production 
 
-
 #>
 [CmdletBinding()]
 param
 (
     [Parameter(Mandatory = $true, HelpMessage="Azure Data Center to host resource.")]
     $Location,
-    [Parameter(Mandatory = $true, HelpMessage="App Service Name. ")]
+    [Parameter(Mandatory = $false, HelpMessage="Storage Account Name. ")]
     $Name,
-    [Parameter(Mandatory = $true, HelpMessage="App Service Plan name.")]
+    [Parameter(Mandatory = $false, HelpMessage="Storage Account Sku. ")]
+    $Sku,    
+    [Parameter(Mandatory = $true, HelpMessage="Azure Subscription name.")]
     $SubscriptionName,
     [Parameter(Mandatory = $true, HelpMessage="Resource Group that holds all associated resources")]
     $ResourceGroupName
 )
-
- $subscription = Get-AzureSubscription -Name $SubscriptionName 
-
+write-host "Create-StorageAccount.ps1 -Name $name -Sku $Sku -SubscriptionName $SubscriptionName" -ForegroundColor Yellow
+$subscription = Get-AzureRmSubscription -SubscriptionName $SubscriptionName 
 if($null -ne $subscription.CurrentStorageAccountName){
     write-host "Storage Account Already configured for this subscription. the current storage account is $($subscription.GetAccountName())" -ForegroundColor Red 
-    return Get-AzureStorageKey -StorageAccountName $subscription.GetAccountName()
-} 
-
-if($null -eq (get-AzureStorageAccount -StorageAccountName $name  -ErrorAction SilentlyContinue)){
-    New-AzureStorageAccount -StorageAccountName $Name.ToLower() -Location $Location | Out-Null  
-    Set-AzureSubscription -CurrentStorageAccountName $Name.ToLower() -SubscriptionName $SubscriptionName
+    if($subscription.GetAccountName() -eq $Name){
+        $useExisting = Read-Host -Prompt "Do you want to use this storage account?(Y/N)"
+        if((-not [String]::IsNullOrEmpty($useExisting)) -and $useExisting.ToUpper() -eq "Y"){
+            return Get-AzureStorageKey -StorageAccountName $subscription.GetAccountName() 
+        }
+    }
 }
 
-$result = Get-AzureStorageKey -StorageAccountName $name
-return $result 
+$name = ./Confirm-ParameterValue.ps1 "Name your Storage Account" -value $Name
+$Sku = ./Confirm-ParameterValue.ps1 "Name your Storage Account Sku" -value $sku
+try{
+    if($null -eq (get-AzureRmStorageAccount -name $name -ResourceGroupName $ResourceGroupName  -ErrorAction SilentlyContinue)){
+        New-AzureRMStorageAccount -Name $Name.ToLower() -Location $Location -ResourceGroupName $ResourceGroupName -SkuName $Sku | Out-Null  
+    }
+}catch{
+    write-error -Message "Exception processing storage account. The message is" -Exception $_.Exception
+    $read =read-host -prompt "Do you want to try again with a different name?[Y] for yes, anything else for no" 
+    if((-not [String]::IsNullOrEmpty($read)) -and $read.ToUpper() -eq "Y"){
+        return ./Create-StorageAccount.ps1 -Location $location -Name $newAccountName -ResourceGroupName $ResourceGroupName
+    }
+    throw
+}
+return @{ 
+    Name = $name 
+    Sku = $Sku
+    Key = ((Get-AzureRmStorageAccountKey -Name $name -ResourceGroupName $ResourceGroupName)| Where-Object{ $_.KeyName -eq "Key1"}).Value
+}

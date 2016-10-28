@@ -36,10 +36,8 @@ Param(
    [Switch]$Force,
 
    [Parameter(Mandatory=$false)]
-   [SecureString]$Password
+   $Password
 )
-
-# DO NOT MODIFY BELOW
 
 function CreateSelfSignedCertificate(){
     
@@ -55,13 +53,13 @@ function CreateSelfSignedCertificate(){
     {
         if($Force)
         {
-        
             foreach($c in $certs)
             {
                 remove-item $c.PSPath
             }
         } else {
             Write-Host -ForegroundColor Red "One or more certificates with the same common name (CN=$CommonName) are already located in the local certificate store. Use -Force to remove them";
+			throw "Certificate Already created. Delete it from your personal certificate store"
             return $false
         }
     }
@@ -108,14 +106,13 @@ function ExportPFXFile()
         # Remove CN from common name
         $CommonName = $CommonName.Substring(3)
     }
-    if($Password -eq $null)
+    while($Password -eq $null)
     {
-        $Password = Read-Host -Prompt "Enter Password to protect private key" -AsSecureString
+	        $Password = Read-Host -Prompt "Enter Password to protect private key" -AsSecureString
     }
     $cert = Get-ChildItem -Path Cert:\LocalMachine\my | where-object{$_.Subject -eq "CN=$CommonName"}
-    
-    Export-PfxCertificate -Cert $cert -Password $Password -FilePath "$($CommonName).pfx"
-    Export-Certificate -Cert $cert -Type CERT -FilePath "$CommonName.cer"
+    Export-PfxCertificate -Cert $cert -Password (ConvertTo-SecureString $Password -AsPlainText -Force) -FilePath "$($CommonName).pfx" -Force
+    Export-Certificate -Cert $cert -Type CERT -FilePath "$CommonName.cer" -Force
 }
 
 function RemoveCertsFromStore()
@@ -133,10 +130,20 @@ function RemoveCertsFromStore()
     }
 }
 
+#$CommonName = ./Confirm-ParameterValue.ps1 -prompt "Confirm your Certificate common name" -value $CommonName
+#$Password = ./Confirm-ParameterValue.ps1 -prompt "Confirm your Certificate Password" -value $Password 
 if(CreateSelfSignedCertificate)
 {
-   # RemoveCertsFromStore
-    ExportPFXFile
+   try{
+		ExportPFXFile
+		return $CommonName
+	}catch{
+		Throw 
+	}
     #// remove certs from store prevents testing locally as partner pack code retrieves cert from store
    # RemoveCertsFromStore
 }
+return @(
+    CommonName = $CommonName
+    Password = $Password 
+)

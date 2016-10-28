@@ -12,12 +12,14 @@ param
     $Owner,
     [Parameter(Mandatory = $true, HelpMessage="Enter the name of azure app service , e.g. 'PnPPartnerPack'")]
     [String]
-    $AzureService 
+    $AzureService,
+    [Parameter(Mandatory = $false, HelpMessage="Office 365 Creds ")]
+    $Credentials  
 )
 
 Write-Host "Creating Infrastructure Site collection. It will wait until it is finished"
 $job  = Start-Job { 
-    Connect-SPOnline "https://$tenant-admin.sharepoint.com/"
+    Connect-SPOnline "https://$tenant-admin.sharepoint.com/" -Credentials $Credentials
     if((Get-SPOTenantSite -Url $InfrastructureUrl -ErrorAction 0) -eq $null)
     {
         New-SPOTenantSite -Title "PnP Partner Pack - Infrastructural Site" -Url $InfrastructureSiteUrl -Owner $Owner -Lcid 1033 -Template "STS#0" -TimeZone 4 -Wait #-RemoveDeletedSite
@@ -30,5 +32,5 @@ while ($job.JobStateInfo -eq 'Running'){
 Write-Host "." -NoNewline
 
 Write-Host "Importing Site Artifacts"
-.\Provision-InfrastructureSiteArtifacts.ps1 -InfrastructureSiteUrl $InfrastructureSiteUrl  -AzureWebSiteUrl "http://$($azureService).azurewebsites.net"
+.\Provision-InfrastructureSiteArtifacts.ps1 -InfrastructureSiteUrl $InfrastructureSiteUrl  -AzureWebSiteUrl "http://$($azureService).azurewebsites.net" -Credentials $Credentials
 Write-Host "Infrastructure Site Created. Url $InfrastructureSiteUrl"
