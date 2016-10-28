@@ -34,7 +34,7 @@ Param(
    [Parameter(Mandatory=$false)]
    [string]$StartDateAndTime = (Get-Date -Format "yyyy-MM-dd 06:00")
 )
-
+write-host "Provision-GovernanceTimerJobs.ps1 -Build $Build -Location $Location -AzureWebSite $AzureWebSite -JobCollection $JobCollection -StartDateAndTime $StartDateAndTime" -ForegroundColor Yellow
 # DO NOT MODIFY BELOW
 if($null -eq (Get-AzureAccount -EA 0)){
     Add-AzureAccount

@@ -55,13 +55,13 @@ function Init-Session
 
     select-azuresubscription -SubscriptionName $config.SubscriptionName
 }
-function Create-StorageAccount{
+function CreateStorageAccount{
     $storage =  ./Create-StorageAccount.ps1 -name $config.StorageAccountName -ResourceGroupName  $config.ResourceGroupName -Location $config.Location -SubscriptionName $config.SubscriptionName -Sku $config.StorageAccountSku
     $config.StorageAccountName = $storage.Name
     $config.StorageAccountSku = $storage.Sku
     $config.StorageAccountKey = $storage.Key
 }
-function Create-AppService
+function CreateAppService
 {
     Write-host "creating app service plan" -ForegroundColor Yellow
     $plan= ./Create-AppServicePlan.ps1  -Location $config.Location `
@@ -80,7 +80,7 @@ function Create-AppService
                                 -CertificateFile $config.CertificateCommonName `
                                 -CertificatePassword $config.CertificatePassword `                                -CertificateThumbprint $config.CertificateThumbprint
 }
-function Create-AzureADApplication
+function CreateAzureADApplication
 {
     if($config.ApplicationIdentifierUri -eq $null)
     {
@@ -91,8 +91,9 @@ function Create-AzureADApplication
                                                             -ApplicationIdentifierUri $config.ApplicationIdentifierUri `
                                                             -CertificateFile $config.CertificateCommonName `
                                                             -Tenant $config.Tenant 
+    $config.AzureADApplicationId = $azureADApplication.ApplicationId.Guid.ToString()
 }
-function Create-InfrastructureSiteCollection 
+function CreateInfrastructureSiteCollection 
 {
     $config.InfrastructureSiteOwner = ./Confirm-ParameterValue.ps1 -prompt "Confirm Infrastructure Site Collection owner" -value $username 
     $config.InfrastructureSiteUrl = ./Confirm-ParameterValue.ps1 -prompt "Confirm Infrastructure Site Collection Url" -value $config.InfrastructureSiteUrl
@@ -103,37 +104,41 @@ function Create-InfrastructureSiteCollection
                                                 -InfrastructureSiteUrl $config.InfrastructureSiteUrl `
                                                 -Credentials  $office365Creds
 }
-function Create-SelfSignedCertificate
+function CreateSelfSignedCertificate
 {
     $config.CertificateCommonName = ./Confirm-ParameterValue.ps1 -prompt "Confirm your Certificate common name" -value $config.CertificateCommonName
     $config.CertificatePassword = ./Confirm-ParameterValue.ps1 -prompt "Confirm your Certificate Password" -value $config.CertificatePassword
-
-    if(-not (Test-PAth "./$($config.CertificateCommonName).pfx" ) -or -not (Test-PAth "./$($config.CertificateCommonName).pfx" )){
+  #  if(-not (Test-PAth "./$($config.CertificateCommonName).pfx" ) -or -not (Test-PAth "./$($config.CertificateCommonName).pfx" )){
         $certificate = ./Create-SelfSignedCertificate.ps1 -CommonName $config.CertificateCommonName -StartDate (get-date).AddDays(-1) -EndDate (get-date).AddYears(5) -Password $config.CertificatePassword
-    }
+   # }
     $certificateInfo =  ./Get-SelfSignedCertificateInformation.ps1 -CertificateFile $config.CertificateCommonName  
     $config.CertificateThumbprint = $certificateInfo.CertificateThumbprint
+}
+function ConfigureConfigs{
+
+    write-host "preparing config files" -ForegroundColor Yellow
+    .\Configure-Configs.ps1    -AzureStorageAccountName $config.StorageAccountName `
+                                -AzureStoragePrimaryAccessKey $config.StorageAccountKey `
+                                -ClientId $config.AzureADApplicationId  `
+                                -ClientSecret $config.AppClientSecret `
+                                -ADTenant "$($config.Tenant).onmicrosoft.com" `
+                                -CertificateThumbprint $config.CertificateThumbprint `
+                                -InfrastructureSiteUrl $config.InfrastructureSiteUrl
+
+
 }
 Init-Session
 
 $config.ResourceGroupName = ./Create-ResourceGroup.ps1 -name $config.ResourceGroupName -Location $config.Location 
 
-Create-SelfSignedCertificate
-Create-StorageAccount 
-Create-AppService
-Create-AzureADApplication 
-Create-InfrastructureSiteCollection 
+CreateSelfSignedCertificate
+CreateStorageAccount 
+CreateAppService
+CreateAzureADApplication 
+CreateInfrastructureSiteCollection 
 
-write-host "preparing config files" -ForegroundColor Yellow
-.\Configure-Configs.ps1    -AzureStorageAccountName $config.StorageAccountName `
-                            -AzureStoragePrimaryAccessKey $storage.Key `
-                            -ClientId $azureADApplication.ApplicationId.Guid.ToString()  `
-                            -ClientSecret $config.AppClientSecret `
-                            -ADTenant "$($config.Tenant).onmicrosoft.com" `
-                            -CertificateThumbprint $certificateInfo.CertificateThumbprint `
-                            -InfrastructureSiteUrl $config.InfrastructureSiteUrl
+ConfigureConfigs
 
-write-host "config files set up, deploying governance timer jobs" -ForegroundColor Yellow
 .\Provision-GovernanceTimerJobs.ps1 -Location $config.Location -AzureWebSite $config.AppServiceName     |Out-null               
 
 write-host "Scripted configuration completed. You need to configure the required API permissions within Azure AD for Application $($config.AppServiceName) " -ForegroundColor Yellow

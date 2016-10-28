@@ -55,7 +55,7 @@ function CreateSelfSignedCertificate(){
         {
             foreach($c in $certs)
             {
-                remove-item $c.PSPath
+                remove-item $c.PSPath -force
             }
         } else {
             Write-Host -ForegroundColor Red "One or more certificates with the same common name (CN=$CommonName) are already located in the local certificate store. Use -Force to remove them";
@@ -126,22 +126,21 @@ function RemoveCertsFromStore()
     $certs = Get-ChildItem -Path Cert:\LocalMachine\my | Where-Object{$_.Subject -eq "CN=$CommonName"}
     foreach($c in $certs)
     {
-        remove-item $c.PSPath
+        remove-item $c.PSPath -Force
     }
 }
 
-#$CommonName = ./Confirm-ParameterValue.ps1 -prompt "Confirm your Certificate common name" -value $CommonName
-#$Password = ./Confirm-ParameterValue.ps1 -prompt "Confirm your Certificate Password" -value $Password 
+RemoveCertsFromStore
+
 if(CreateSelfSignedCertificate)
 {
    try{
-		ExportPFXFile
-		return $CommonName
+        ExportPFXFile
+		#RemoveCertsFromStore
+        return $CommonName
 	}catch{
 		Throw 
 	}
-    #// remove certs from store prevents testing locally as partner pack code retrieves cert from store
-   # RemoveCertsFromStore
 }
 return @(
     CommonName = $CommonName

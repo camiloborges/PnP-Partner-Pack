@@ -36,33 +36,33 @@ param
 
 )
 
-write-host "Create-AzureADApplication.ps1 -ApplicationServiceName $ApplicationServiceName -ApplicationServiceName $ApplicationServiceName -ApplicationIdentifierUri $ApplicationIdentifierUri -AppServiceTier $AppServiceTier"
+write-host "Create-AzureADApplication.ps1 -ApplicationServiceName $ApplicationServiceName -ApplicationServiceName $ApplicationServiceName -ApplicationIdentifierUri $ApplicationIdentifierUri -AppServiceTier $AppServiceTier" -ForegroundColor Yellow
 
 function SetKeys
 {
     $enc = [System.Text.Encoding]::ASCII
+    $KeyIdentifier = "pnppartnerpack"
     Get-AzureADApplicationKeyCredential -ObjectId $app.ObjectId | 
                                     Where-Object { 
-                                        $null -ne $_.CustomKeyIdentifier -and $enc.GetString($_.CustomKeyIdentifier) -eq "PnPProvisioningCert" 
+                                        $null -ne $_.CustomKeyIdentifier -and $enc.GetString($_.CustomKeyIdentifier) -eq $KeyIdentifier 
                                     }| ForEach-Object {
                                        Remove-AzureADApplicationKeyCredential -ObjectId $app.ObjectId -KeyId $_.KeyId
                                     }
-
+    Sleep -Seconds 2
     New-AzureADApplicationKeyCredential -ObjectId $app.ObjectId `
-                                    -CustomKeyIdentifier "PnPProvisioningCert" `
+                                    -CustomKeyIdentifier $KeyIdentifier `
                                     -StartDate (Get-DAte).ToUniversalTime() `
                                     -EndDate (get-Date).AddYears(2) -Usage Verify `
                                     -Value $certificateInfo.KeyCredentials.value -Type AsymmetricX509Cert |Out-Null
-
-    $keyIdentifier = $config.AppServiceName.Substring(0,20).ToLower()
     Get-AzureADApplicationPasswordCredential -ObjectId $app.ObjectId | 
                                     Where-Object { 
                                         $enc.GetString($_.CustomKeyIdentifier) -eq $keyIdentifier 
                                     } | ForEach-Object {
                                         Remove-AzureADApplicationPasswordCredential -ObjectId $app.ObjectId -KeyId $_.KeyId
                                     }
+    Sleep -Seconds 2
 
-    New-AzureADApplicationPasswordCredential -ObjectId $app.ObjectId -CustomKeyIdentifier $config.AppServiceName.Substring(0,20).ToLower() `
+    New-AzureADApplicationPasswordCredential -ObjectId $app.ObjectId -CustomKeyIdentifier $keyIdentifier `
                                     -Value $config.AppClientSecret |Out-Null
  
 
@@ -90,3 +90,5 @@ SetKeys
 Set-AzureRmADApplication -ObjectId $app.ObjectId  -ReplyUrls @($homepage.ToLower(),"https://localhost:44300/")
 
 SetServicePrincipal
+
+$app

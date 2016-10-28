@@ -38,36 +38,40 @@ param
     [Parameter(Mandatory = $true, HelpMessage="Thumbprint of certificate used for ssl binding.")]
     $CertificateThumbprint
 )
-
-write-host "Create-AppService.ps1  -Name $Name  -Location $Location -ResourceGroupName $ResourceGroupName " -ForegroundColor Yellow
-
-$name = ./Confirm-ParameterValue.ps1 "Confirm your App Service/Web App name" -value $name
-
-$app = (Get-AzureRmWebApp -Name $Name -ResourceGroupName $ResourceGroupName  -EA 0 )
-if($null -eq $app -or $app.Count -eq 0){
-    try{
-        $app=    New-AzureRmWebApp -Name $Name  -AppServicePlan $ServicePlan -ResourceGroupName $ResourceGroupName -Location $Location  
-    }catch{
-        write-error "Problems creating App Service Instance." -Exception $_.Exception 
-        if("Y" -eq (read-host "Do You want to try again? [Y] for yes, anything else for no")){
-           return  ./Create-AppService.ps1 -Name $name -ServicePlan $ServicePlan -ResourceGroupName $ResourceGroupName -CertificateFile $CertificateFile -CertificateCommonName $CertificateCommonName -CertificateThumbprint $CertificateThumbprint -CertificatePassword $CertificatePassword -Location            }else{
-            break;
+function CreateApp
+{
+    $app = (Get-AzureRmWebApp -Name $Name -ResourceGroupName $ResourceGroupName  -EA 0 )
+    if($null -eq $app -or $app.Count -eq 0){
+        try{
+            $app=    New-AzureRmWebApp -Name $Name  -AppServicePlan $ServicePlan -ResourceGroupName $ResourceGroupName -Location $Location  
+        }catch{
+            write-error "Problems creating App Service Instance." -Exception $_.Exception 
+            if("Y" -eq (read-host "Do You want to try again? [Y] for yes, anything else for no")){
+               return  ./Create-AppService.ps1 -Name $name -ServicePlan $ServicePlan -ResourceGroupName $ResourceGroupName -CertificateFile $CertificateFile -CertificateCommonName $CertificateCommonName -CertificateThumbprint $CertificateThumbprint -CertificatePassword $CertificatePassword -Location            }else{
+                break;
+            }
         }
+    }elseif($app.Count -gt 1){
+        write-error "Multiple Applications found with the same name. Stopping now" 
+        break;
     }
-}elseif($app.Count -gt 1){
-    write-error "Multiple Applications found with the same name. Stopping now" 
-    break;
-}
+    return $app 
 
-$hash = @{}
-ForEach ($s in $app.SiteConfig.AppSettings) {
-    $hash[$s.Name] = $s.Value
 }
-$hash["WEBSITE_LOAD_CERTIFICATES"] = "*"
-$hash["WEBJOBS_IDLE_TIMEOUT"] = "10000"
-$hash["SCM_COMMAND_IDLE_TIMEOUT"] = "10000"
+function SetProperties
+{
+    $hash = @{}
+    ForEach ($s in $app.SiteConfig.AppSettings) {
+        $hash[$s.Name] = $s.Value
+    }
+    $hash["WEBSITE_LOAD_CERTIFICATES"] = "*"
+    $hash["WEBJOBS_IDLE_TIMEOUT"] = "10000"
+    $hash["SCM_COMMAND_IDLE_TIMEOUT"] = "10000"
 
-Set-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $Name -AppSettings $hash 
+    Set-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $Name -AppSettings $hash 
+
+}
+function SetSslCertificate{
 
 if((Get-AzureRmWebAppSSLBinding -WebAppName $name -Name $CertificateCommonName -ResourceGroupName $ResourceGroupName).Count -eq 0){
     $pfxPath = resolve-path "./$($CertificateFile).pfx"
@@ -92,4 +96,14 @@ try{
     } 
 } 
 
+
+}
+write-host "Create-AppService.ps1  -Name $Name  -Location $Location -ResourceGroupName $ResourceGroupName " -ForegroundColor Yellow
+
+$name = ./Confirm-ParameterValue.ps1 "Confirm your App Service/Web App name" -value $name
+
+$app = CreateApp
+SetProperties 
+
+SetSSLCertificate 
 return $name

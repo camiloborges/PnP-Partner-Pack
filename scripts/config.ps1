@@ -34,7 +34,7 @@ if($Global:config -eq $null -or $force )
         #Self Signed Certificate common name.(cn=$CertificateCommonName ). Name is irrelevant as certificate isn't bound to HTTPS requests.
         CertificateCommonName = "contoso.com"
         #password to be used in certificate. 
-        CertificatePassword = "Password1" 
+        CertificatePassword = ./New-AppSecret.ps1 -length 10 
         # randomly generated app secret. 
         AppClientSecret=./New-AppSecret.ps1 
         #ApplicationIdentifierUri is identifier used by Azure AD Application
