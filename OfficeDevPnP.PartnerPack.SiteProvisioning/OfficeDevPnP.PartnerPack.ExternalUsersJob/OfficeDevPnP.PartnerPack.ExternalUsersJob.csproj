@@ -186,7 +186,6 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-    <None Include="Properties\PublishProfiles\erwinmcmtest.pubxml" />
     <None Include="Properties\webjob-publish-settings.json" />
   </ItemGroup>
   <ItemGroup>
@@ -194,6 +193,9 @@
       <Project>{AF195497-CAFD-444E-9B7B-D3B0ACAC455C}</Project>
       <Name>OfficeDevPnP.PartnerPack.Infrastructure</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Web.WebJobs.Publish.1.0.10\tools\webjobs.targets" Condition="Exists('..\packages\Microsoft.Web.WebJobs.Publish.1.0.10\tools\webjobs.targets')" />

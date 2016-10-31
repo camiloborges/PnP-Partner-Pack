@@ -195,3 +195,9 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 
+/deploy
+/scripts/thumb.txt
+/scripts/tempSetParameters.xml
+/scripts/contoso.com.cer
+/scripts/Contoso.com.au.cer
+/scripts/config.json

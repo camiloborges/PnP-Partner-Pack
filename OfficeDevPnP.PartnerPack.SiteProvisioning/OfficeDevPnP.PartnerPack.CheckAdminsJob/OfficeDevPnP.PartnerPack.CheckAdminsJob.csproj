@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>C:\Users\erwvan\Desktop\</PublishUrl>
+    <PublishUrl>..\..\deploy\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -47,6 +47,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Azure.ActiveDirectory.GraphClient, Version=2.1.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -202,7 +205,6 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-    <None Include="Properties\PublishProfiles\erwinmcmtest.pubxml" />
     <None Include="Properties\webjob-publish-settings.json" />
   </ItemGroup>
   <ItemGroup>
@@ -222,6 +224,9 @@
       <Project>{af195497-cafd-444e-9b7b-d3b0acac455c}</Project>
       <Name>OfficeDevPnP.PartnerPack.Infrastructure</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
