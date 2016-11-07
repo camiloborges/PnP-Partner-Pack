@@ -127,7 +127,7 @@ function ConfigureConfigs{
                                 -AzureStoragePrimaryAccessKey $config.StorageAccountKey `
                                 -ClientId $config.ClientId  `
                                 -ClientSecret $config.ClientSecret `
-                                -ADTenant "$($config.Tenant).onmicrosoft.com" `
+                                -ADTenant "$($config.Tenant)" `
                                 -CertificateThumbprint $config.CertificateThumbprint `
                                 -InfrastructureSiteUrl $config.InfrastructureSiteUrl
 

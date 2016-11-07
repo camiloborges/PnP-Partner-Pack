@@ -106,8 +106,8 @@ foreach($configFile in $configFiles)
         $tenantSettingsNode.appOnlyCertificateThumbprint = $cert.Thumbprint
     }
     $tenantSettingsNode.infrastructureSiteUrl = $InfrastructureSiteUrl
-    $tenantSettingsNode.useApproval = $useApproval
-    $tenantSettingsNode.usePostProcessing = $usePostProcessing
+    $tenantSettingsNode.useApproval = $useApproval.ToString().ToLower()
+    $tenantSettingsNode.usePostProcessing = $usePostProcessing.ToString().ToLower()
 
     $configDoc.Save("$basePath\$configFile")
 }

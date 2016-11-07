@@ -196,3 +196,6 @@ FakesAssemblies/
 *.opt
 
 /deploy
+/OfficeDevPnP.PartnerPack.SiteProvisioning/OfficeDevPnP.PartnerPack.CheckAdminsJob/EnforceAdminsJob.zip
+/OfficeDevPnP.PartnerPack.SiteProvisioning/OfficeDevPnP.PartnerPack.ExternalUsersJob/ExternalUsersJob.zip
+/OfficeDevPnP.PartnerPack.SiteProvisioning/OfficeDevPnP.PartnerPack.ScheduledJob/ScheduledJob.zip
