@@ -257,7 +257,11 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.SharePoint
             {
                 // Set the initial status of the Job
                 job.JobId = jobId;
-                job.Status = ProvisioningJobStatus.Pending;
+                if(PnPPartnerPackSettings.UseApproval )
+                    job.Status = ProvisioningJobStatus.WaitingApproval;
+
+                else
+                    job.Status = ProvisioningJobStatus.Pending;
 
                 // Convert the current Provisioning Job into a Stream
                 Stream stream = job.ToJsonStream();

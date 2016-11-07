@@ -26,7 +26,7 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Configuration {
         
         private PnPPartnerPackConfigurationGeneralSettings generalSettingsField;
         
-        private PnPPartnerPackConfigurationCertificateSettings certificateSettingsField;
+        private PnPPartnerPackConfigurationCertificateSettings certificateSettingsField;    
         
         private PnPPartnerPackConfigurationTenantSettings tenantSettingsField;
         
@@ -265,6 +265,10 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Configuration {
         private string infrastructureSiteUrlField;
         
         private string appOnlyCertificateThumbprintField;
+
+        private bool useApprovalField = false;
+
+        private bool usePostProcessingField = false;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -296,6 +300,33 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Configuration {
             }
             set {
                 this.appOnlyCertificateThumbprintField = value;
+            }
+        }
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool useApproval
+        {
+            get
+            {
+                return this.useApprovalField;
+            }
+            set
+            {
+                this.useApprovalField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public bool usePostProcessing
+        {
+            get
+            {
+                return this.usePostProcessingField;
+            }
+            set
+            {
+                this.usePostProcessingField = value;
             }
         }
     }

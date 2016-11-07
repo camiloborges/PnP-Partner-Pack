@@ -33,7 +33,7 @@ param
     [String]
     $AzureStoragePrimaryAccessKey,
 
-	[Parameter(Mandatory = $true, HelpMessage="Enter the client id for your Azure AD App")]
+    [Parameter(Mandatory = $true, HelpMessage="Enter the client id for your Azure AD App")]
     [String]
     $ClientId,
 
@@ -42,21 +42,28 @@ param
     $ClientSecret,
 
     [Parameter(Mandatory = $true, HelpMessage="Enter the AD tenant name, e.g. mytenant.onmicrosoft.com")]
-	[String]
-	$ADTenant,
+    [String]
+    $ADTenant,
 
-	[Parameter(Mandatory = $false, HelpMessage="The full path to the certificate file that you uploaded to the azure web site for app authentication", ParameterSetName="CertificatePath")]
+    [Parameter(Mandatory = $false, HelpMessage="The full path to the certificate file that you uploaded to the azure web site for app authentication", ParameterSetName="CertificatePath")]
     [String]
     $CertificatePath,
 
-	[Parameter(Mandatory = $false, HelpMessage="The certificate thumbprint value", ParameterSetName="Thumbprint")]
+    [Parameter(Mandatory = $false, HelpMessage="The certificate thumbprint value", ParameterSetName="Thumbprint")]
     [String]
     $CertificateThumbprint,
 
-	[Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true)]
     [String]
-    $InfrastructureSiteUrl
+    $InfrastructureSiteUrl,
 
+    [Parameter(Mandatory = $false)]
+    [Boolean]
+    $useApproval = $false,
+
+    [Parameter(Mandatory = $false)]
+    [Boolean]
+    $usePostProcessing = $false
 )
 # DO NOT MODIFY BELOW
 $basePath = "$(convert-path ..)\OfficeDevPnP.PartnerPack.SiteProvisioning"
@@ -99,6 +106,8 @@ foreach($configFile in $configFiles)
         $tenantSettingsNode.appOnlyCertificateThumbprint = $cert.Thumbprint
     }
     $tenantSettingsNode.infrastructureSiteUrl = $InfrastructureSiteUrl
+    $tenantSettingsNode.useApproval = $useApproval
+    $tenantSettingsNode.usePostProcessing = $usePostProcessing
 
     $configDoc.Save("$basePath\$configFile")
 }

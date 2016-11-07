@@ -35,5 +35,6 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs
         /// Defines the Error Message of the Provisioning Job, if any
         /// </summary>
         public String ErrorMessage { get; set; }
+
     }
 }

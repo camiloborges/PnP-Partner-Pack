@@ -25,7 +25,7 @@
               <xsd:element name="WelcomeMessage" minOccurs="1" maxOccurs="1">
                 <xsd:annotation>
                   <xsd:documentation xml:lang="en">
-                    The Welcome Message used in the Home Page of the application. 
+                    The Welcome Message used in the Home Page of the application.
                   </xsd:documentation>
                 </xsd:annotation>
                 <xsd:complexType mixed="true">
@@ -100,6 +100,7 @@
             </xsd:documentation>
           </xsd:annotation>
           <xsd:complexType>
+            
             <xsd:attribute name="tenant" type="xsd:string" use="required">
               <xsd:annotation>
                 <xsd:documentation xml:lang="en">
@@ -121,6 +122,21 @@
                 </xsd:documentation>
               </xsd:annotation>
             </xsd:attribute>
+            <xsd:attribute name="useApproval" type="xsd:boolean" use="optional" default="false">
+              <xsd:annotation>
+                <xsd:documentation xml:lang="en">
+                  If enabled then Partner Pack will set provisioning job to "Waiting Approval" and a 3rd party solution needs to set it to Pending in order to trigger provisioning process.
+                </xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="usePostProcessing" type="xsd:boolean" use="optional" default="false">
+              <xsd:annotation>
+                <xsd:documentation xml:lang="en">
+                  If enabled then Partner Pack will set provisioning job to "Post Processing" and a 3rd party solution needs to set it to Provisioned.
+                </xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+
           </xsd:complexType>
         </xsd:element>
         <xsd:element name="ProvisioningRepository" type="pnp:DotNetHandlerType">
@@ -181,7 +197,7 @@
                       </xsd:annotation>
                     </xsd:element>
                   </xsd:sequence>
-                </xsd:complexType>                
+                </xsd:complexType>
               </xsd:element>
               <xsd:element name="JobTypes">
                 <xsd:annotation>
@@ -242,7 +258,7 @@
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
-            </xsd:sequence>            
+            </xsd:sequence>
           </xsd:complexType>
         </xsd:element>
       </xsd:sequence>

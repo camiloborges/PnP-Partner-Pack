@@ -437,7 +437,9 @@ namespace OfficeDevPnP.PartnerPack.SiteProvisioning.Controllers
             model.PersonalJobs = ProvisioningRepositoryFactory.Current.GetTypedProvisioningJobs<SiteCollectionProvisioningJob>(
                 ProvisioningJobStatus.Pending | ProvisioningJobStatus.Running |
                 ProvisioningJobStatus.Provisioned | ProvisioningJobStatus.Failed |
-                ProvisioningJobStatus.Cancelled,
+                ProvisioningJobStatus.Cancelled |
+                ProvisioningJobStatus.PostProcessing |
+                ProvisioningJobStatus.WaitingApproval,
                 ClaimsPrincipal.Current.Identity.Name);
 
             return PartialView("MyProvisionedSitesGrid", model);

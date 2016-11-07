@@ -36,20 +36,39 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs.Handlers
         {
             try
             {
-                // Set the Job status as Running
-                ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
-                job.JobId,
-                ProvisioningJobStatus.Running,
-                String.Empty);
-
-                // Run the Job
-                RunJobInternal(job);
-
-                // Set the Job status as Provisioned (i.e. Completed)
-                ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
+                if(PnPPartnerPackSettings.UseApproval && job.Status == ProvisioningJobStatus.WaitingApproval)
+                {
+                    return; 
+                }
+                if (job.Status == ProvisioningJobStatus.Pending)
+                {
+                    // Set the Job status as Running
+                    ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
                     job.JobId,
-                    ProvisioningJobStatus.Provisioned,
+                    ProvisioningJobStatus.Running,
                     String.Empty);
+
+                    // Run the Job
+                    RunJobInternal(job);
+                }
+
+                if (PnPPartnerPackSettings.UsePostProcessing)
+                {
+                    // Set the Job status as Provisioned (i.e. Completed)
+                    ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
+                        job.JobId,
+                        ProvisioningJobStatus.PostProcessing,
+                        String.Empty);
+
+                }
+                else
+                {
+                    // Set the Job status as Provisioned (i.e. Completed)
+                    ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
+                        job.JobId,
+                        ProvisioningJobStatus.Provisioned,
+                        String.Empty);
+                }
             }
             catch (Exception ex)
             {

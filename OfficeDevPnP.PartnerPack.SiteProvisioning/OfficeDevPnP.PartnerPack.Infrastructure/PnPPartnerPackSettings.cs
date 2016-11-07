@@ -24,6 +24,9 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure
 
         private static String _tenant = _configuration.TenantSettings.tenant;
         private static String _infrastructureSiteUrl = _configuration.TenantSettings.infrastructureSiteUrl;
+        private static bool _useApproval = _configuration.TenantSettings.useApproval;
+        private static bool _usePostProcessing = _configuration.TenantSettings.usePostProcessing;
+
         private static String _provisioningRepositoryType = _configuration.ProvisioningRepository.type;
 
         private static readonly Lazy<X509Certificate2> _appOnlyCertificateLazy =
@@ -166,7 +169,28 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure
                 return (_infrastructureSiteUrl);
             }
         }
-        
+        /// <summary>
+        /// Defines if provisioning job status should wait for external approval before being set to pending
+        /// </summary>
+        public static bool UseApproval
+        {
+            get
+            {
+                return (_useApproval);
+            }
+        }
+
+        /// <summary>
+        /// Defines if provisioning job status should be set to Post Processing after provisioning. If that is used then job needs to be set to Provisioned by 3rd party solution 
+        /// </summary>
+        public static bool UsePostProcessing
+        {
+            get
+            {
+                return (_usePostProcessing);
+            }
+        }
+
         /// <summary>
         /// Provides the .NET type name of the Provisioning Repository
         /// </summary>

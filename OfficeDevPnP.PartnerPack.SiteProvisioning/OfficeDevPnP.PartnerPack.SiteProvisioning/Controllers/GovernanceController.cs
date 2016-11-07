@@ -97,7 +97,10 @@ namespace OfficeDevPnP.PartnerPack.SiteProvisioning.Controllers
             // Retrieve any pending, running, or failed job
             var runningJobs = ProvisioningRepositoryFactory.Current.GetProvisioningJobs(
                 ProvisioningJobStatus.Pending | ProvisioningJobStatus.Running |
-                ProvisioningJobStatus.Failed, typeof(RefreshSitesJob).FullName, 
+                ProvisioningJobStatus.Failed |
+                ProvisioningJobStatus.WaitingApproval |
+                ProvisioningJobStatus.Failed |
+                ProvisioningJobStatus.PostProcessing, typeof(RefreshSitesJob).FullName, 
                 false);
 
             if (runningJobs != null && runningJobs.Length > 0)
@@ -106,8 +109,15 @@ namespace OfficeDevPnP.PartnerPack.SiteProvisioning.Controllers
                 var lastJob = runningJobs.OrderByDescending(j => j.ScheduledOn).First();
 
                 // Configure the model accordingly
-                model.Status = lastJob.Status == ProvisioningJobStatus.Pending | lastJob.Status == ProvisioningJobStatus.Running ? RefreshJobStatus.Running :
-                    (lastJob.Status == ProvisioningJobStatus.Failed ? RefreshJobStatus.Failed : RefreshJobStatus.Idle);
+                var lastStatus = lastJob.Status;
+                var refreshJobStatus = RefreshJobStatus.Idle;
+                if (lastStatus == ProvisioningJobStatus.Failed) {
+                    refreshJobStatus = RefreshJobStatus.Failed;
+                } else if (lastStatus == (ProvisioningJobStatus.Running | ProvisioningJobStatus.Pending| ProvisioningJobStatus.PostProcessing | ProvisioningJobStatus.WaitingApproval)) {
+                    refreshJobStatus = RefreshJobStatus.Running;
+                } 
+
+                model.Status = refreshJobStatus;
 
                 if (model.Status == RefreshJobStatus.Failed)
                 {
@@ -117,7 +127,7 @@ namespace OfficeDevPnP.PartnerPack.SiteProvisioning.Controllers
 
             return View(model);
         }
-
+        
         [HttpPost]
         public ActionResult RefreshSites(RefreshSitesViewModel model)
         {

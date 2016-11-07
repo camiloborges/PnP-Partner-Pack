@@ -32,5 +32,13 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure
         /// The Provisioning Job as been completed
         /// </summary>
         Provisioned = 32,
+        /// <summary>
+        /// The Provisioning Job is waiting for system approval 
+        /// </summary>
+        WaitingApproval = 64,
+        /// <summary>
+        /// The ProvisioningJob is waiting for post provisioning jobs 
+        /// </summary>
+        PostProcessing = 128,
     }
 }
