@@ -51,7 +51,8 @@ function Init-Session
     $locations = GEt-AzureRMLocation | ForEach-Object {$_.DisplayName}
     $config.SubscriptionName = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Subscription you'll use" -value $config.SubscriptionName -options $subscriptions)
     $config.Location = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Location you'll are " -value $config.Location -options $locations)
-
+    $config.LocalDebug = [String]::IsNullOrEmpty( (Read-Host "Do you wish to debug this solution locally? [Enter] for yes, anything else for [no]")))
+    
     while($null -eq (Get-AzureRmSubscription -SubscriptionName $config.SubscriptionName -ErrorAction SilentlyContinue))
     {
         write-host "couldn't find a subscription with the name you provided."
@@ -100,7 +101,8 @@ function CreateAzureADApplication
     $azureADApplication =  .\Create-AzureADApplication.ps1 -ApplicationServiceName $config.AppServiceName `
                                                             -ApplicationIdentifierUri $config.ApplicationIdentifierUri `
                                                             -Tenant $config.Tenant `
-                                                            -KeyCredentials $config.KeyCredentials
+                                                            -KeyCredentials $config.KeyCredentials `
+                                                            -LocalDebug  $config.LocalDebug
     $config.ClientId = $azureADApplication.AADApp.ApplicationId.Guid.ToString()
     $config.ClientSecret = $azureADApplication.ClientSecret
 }
@@ -137,7 +139,9 @@ function ConfigureConfigs
                                 -ClientSecret $config.ClientSecret `
                                 -ADTenant "$($config.Tenant)" `
                                 -CertificateThumbprint $config.CertificateThumbprint `
-                                -InfrastructureSiteUrl $config.InfrastructureSiteUrl
+                                -InfrastructureSiteUrl $config.InfrastructureSiteUrl `
+                                -UseApproval $config.UseApproval `
+                                -UsePostProcessing $config.UsePostProcessing
 }
 function BuildPackage
 {
@@ -154,7 +158,6 @@ function DeployApplication
 {
     if([String]::IsNullOrEmpty( (Read-Host "Do you wish to deploy the site provisioning solution now? [Enter] for yes, anything else to try and use an existing package")))
     {
-
         if([String]::IsNullOrEmpty( (Read-Host "Do you wish to build the package now? [Enter] for yes, anything else to try and use an existing package")))
         {
             BuildPackage

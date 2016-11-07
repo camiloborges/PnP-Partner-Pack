@@ -259,7 +259,6 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.SharePoint
                 job.JobId = jobId;
                 if(PnPPartnerPackSettings.UseApproval )
                     job.Status = ProvisioningJobStatus.WaitingApproval;
-
                 else
                     job.Status = ProvisioningJobStatus.Pending;
 
@@ -279,7 +278,11 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.SharePoint
 
                 item[PnPPartnerPackConstants.ContentTypeIdField] = PnPPartnerPackConstants.PnPProvisioningJobContentTypeId;
                 item[PnPPartnerPackConstants.TitleField] = job.Title;
-                item[PnPPartnerPackConstants.PnPProvisioningJobStatus] = ProvisioningJobStatus.Pending.ToString();
+
+                if (PnPPartnerPackSettings.UseApproval)
+                    item[PnPPartnerPackConstants.PnPProvisioningJobStatus] = ProvisioningJobStatus.WaitingApproval.ToString();
+                else
+                    item[PnPPartnerPackConstants.PnPProvisioningJobStatus] = ProvisioningJobStatus.Pending.ToString();
                 item[PnPPartnerPackConstants.PnPProvisioningJobError] = String.Empty;
                 item[PnPPartnerPackConstants.PnPProvisioningJobType] = job.GetType().FullName;
 

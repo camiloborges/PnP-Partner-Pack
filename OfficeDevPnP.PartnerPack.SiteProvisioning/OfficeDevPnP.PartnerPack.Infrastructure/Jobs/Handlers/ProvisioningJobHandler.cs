@@ -50,6 +50,7 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs.Handlers
 
                     // Run the Job
                     RunJobInternal(job);
+                   
                 }
 
                 if (PnPPartnerPackSettings.UsePostProcessing)
