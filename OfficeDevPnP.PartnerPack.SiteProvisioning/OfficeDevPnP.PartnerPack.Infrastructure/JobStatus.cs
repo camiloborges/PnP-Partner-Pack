@@ -37,8 +37,14 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure
         /// </summary>
         WaitingApproval = 64,
         /// <summary>
+        /// The ProvisioningJob is waiting for post provisioning job to run
+        /// </summary>
+        PostProvisioning = 128,
+        /// <summary>
         /// The ProvisioningJob is waiting for post provisioning jobs 
         /// </summary>
-        PostProcessing = 128,
+        RunningPostProvisioning = 256,
+
+
     }
 }

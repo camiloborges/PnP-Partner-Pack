@@ -108,121 +108,131 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs.Handlers
                         }
                     }
 
-                    // Move to the context of the created Site Collection
-                    using (ClientContext clientContext = PnPPartnerPackContextProvider.GetAppOnlyClientContext(siteUrl))
+                    ConfigureSiteCollection(job, siteUrl, template);
+                }
+            }
+        }
+
+        private static void ConfigureSiteCollection(SiteCollectionProvisioningJob job, string siteUrl, ProvisioningTemplate template)
+        {
+            // Move to the context of the created Site Collection
+            using (ClientContext clientContext = PnPPartnerPackContextProvider.GetAppOnlyClientContext(siteUrl))
+            {
+                clientContext.RequestTimeout = Timeout.Infinite;
+
+                Site site = clientContext.Site;
+                Web web = site.RootWeb;
+
+                clientContext.Load(site, s => s.Url);
+                clientContext.Load(web, w => w.Url);
+                clientContext.ExecuteQueryRetry();
+
+                // Check if we need to enable PnP Partner Pack overrides
+                if (job.PartnerPackExtensionsEnabled)
+                {
+                    // Enable Responsive Design
+                    PnPPartnerPackUtilities.EnablePartnerPackOnSite(site.Url);
+
+                    Console.WriteLine("Enabled PnP Partner Pack Overrides on site \"{0}\".",
+                        site.Url);
+                }
+
+                // Check if the site has to be responsive
+                if (job.ResponsiveDesignEnabled)
+                {
+                    // Enable Responsive Design
+                    PnPPartnerPackUtilities.EnableResponsiveDesignOnSite(site.Url);
+
+                    Console.WriteLine("Enabled Responsive Design Template to site \"{0}\".",
+                        site.Url);
+                }
+
+                // Apply the Provisioning Template
+                Console.WriteLine("Applying Provisioning Template \"{0}\" to site.",
+                    job.ProvisioningTemplateUrl);
+
+                // We do intentionally remove taxonomies, which are not supported 
+                // in the AppOnly Authorization model
+                // For further details, see the PnP Partner Pack documentation 
+                ProvisioningTemplateApplyingInformation ptai =
+                    new ProvisioningTemplateApplyingInformation();
+
+                // Write provisioning steps on console log
+                ptai.MessagesDelegate += delegate (string message, ProvisioningMessageType messageType)
+                {
+                    Console.WriteLine("{0} - {1}", messageType, messageType);
+                };
+                ptai.ProgressDelegate += delegate (string message, int step, int total)
+                {
+                    Console.WriteLine("{0:00}/{1:00} - {2}", step, total, message);
+                };
+
+                // Exclude handlers not supported in App-Only
+                ptai.HandlersToProcess ^=
+                    OfficeDevPnP.Core.Framework.Provisioning.Model.Handlers.TermGroups;
+                ptai.HandlersToProcess ^=
+                    OfficeDevPnP.Core.Framework.Provisioning.Model.Handlers.SearchSettings;
+
+                // Configure template parameters
+                if (job.TemplateParameters != null)
+                {
+                    foreach (var key in job.TemplateParameters.Keys)
                     {
-                        clientContext.RequestTimeout = Timeout.Infinite;
-
-                        Site site = clientContext.Site;
-                        Web web = site.RootWeb;
-
-                        clientContext.Load(site, s => s.Url);
-                        clientContext.Load(web, w => w.Url);
-                        clientContext.ExecuteQueryRetry();
-
-                        // Check if we need to enable PnP Partner Pack overrides
-                        if (job.PartnerPackExtensionsEnabled)
+                        if (job.TemplateParameters.ContainsKey(key))
                         {
-                            // Enable Responsive Design
-                            PnPPartnerPackUtilities.EnablePartnerPackOnSite(site.Url);
-
-                            Console.WriteLine("Enabled PnP Partner Pack Overrides on site \"{0}\".",
-                                site.Url);
+                            template.Parameters[key] = job.TemplateParameters[key];
                         }
-
-                        // Check if the site has to be responsive
-                        if (job.ResponsiveDesignEnabled)
-                        {
-                            // Enable Responsive Design
-                            PnPPartnerPackUtilities.EnableResponsiveDesignOnSite(site.Url);
-
-                            Console.WriteLine("Enabled Responsive Design Template to site \"{0}\".",
-                                site.Url);
-                        }
-
-                        // Apply the Provisioning Template
-                        Console.WriteLine("Applying Provisioning Template \"{0}\" to site.",
-                            job.ProvisioningTemplateUrl);
-
-                        // We do intentionally remove taxonomies, which are not supported 
-                        // in the AppOnly Authorization model
-                        // For further details, see the PnP Partner Pack documentation 
-                        ProvisioningTemplateApplyingInformation ptai =
-                            new ProvisioningTemplateApplyingInformation();
-
-                        // Write provisioning steps on console log
-                        ptai.MessagesDelegate += delegate (string message, ProvisioningMessageType messageType) {
-                            Console.WriteLine("{0} - {1}", messageType, messageType);
-                        };
-                        ptai.ProgressDelegate += delegate (string message, int step, int total) {
-                            Console.WriteLine("{0:00}/{1:00} - {2}", step, total, message);
-                        };
-
-                        // Exclude handlers not supported in App-Only
-                        ptai.HandlersToProcess ^=
-                            OfficeDevPnP.Core.Framework.Provisioning.Model.Handlers.TermGroups;
-                        ptai.HandlersToProcess ^=
-                            OfficeDevPnP.Core.Framework.Provisioning.Model.Handlers.SearchSettings;
-
-                        // Configure template parameters
-                        if (job.TemplateParameters != null)
-                        {
-                            foreach (var key in job.TemplateParameters.Keys)
-                            {
-                                if (job.TemplateParameters.ContainsKey(key))
-                                {
-                                    template.Parameters[key] = job.TemplateParameters[key];
-                                }
-                            }
-                        }
-
-                        // Fixup Title and Description
-                        template.WebSettings.Title = job.SiteTitle;
-                        template.WebSettings.Description = job.Description;
-
-                        // Apply the template to the target site
-                        web.ApplyProvisioningTemplate(template, ptai);
-
-                        // Save the template information in the target site
-                        var info = new SiteTemplateInfo()
-                        {
-                            TemplateProviderType = job.TemplatesProviderTypeName,
-                            TemplateUri = job.ProvisioningTemplateUrl,
-                            TemplateParameters = template.Parameters,
-                            AppliedOn = DateTime.Now,
-                        };
-                        var jsonInfo = JsonConvert.SerializeObject(info);
-                        web.SetPropertyBagValue(PnPPartnerPackConstants.PropertyBag_TemplateInfo, jsonInfo);
-
-                        // Set site policy template
-                        if (!String.IsNullOrEmpty(job.SitePolicy))
-                        {
-                            web.ApplySitePolicy(job.SitePolicy);
-                        }
-
-                        // Apply Tenant Branding, if requested
-                        if (job.ApplyTenantBranding)
-                        {
-                            var brandingSettings = PnPPartnerPackUtilities.GetTenantBrandingSettings();
-
-                            using (var repositoryContext = PnPPartnerPackContextProvider.GetAppOnlyClientContext(
-                                PnPPartnerPackSettings.InfrastructureSiteUrl))
-                            {
-                                var brandingTemplate = BrandingJobHandler.PrepareBrandingTemplate(repositoryContext, brandingSettings);
-
-                                // Fixup Title and Description
-                                brandingTemplate.WebSettings.Title = job.SiteTitle;
-                                brandingTemplate.WebSettings.Description = job.Description;
-
-                                BrandingJobHandler.ApplyBrandingOnWeb(web, brandingSettings, brandingTemplate);
-                            }
-                        }
-
-
-                        Console.WriteLine("Applyed Provisioning Template \"{0}\" to site.",
-                            job.ProvisioningTemplateUrl);
                     }
                 }
+                if (template.WebSettings == null)
+                {
+                    template.WebSettings = new WebSettings();
+                }
+                // Fixup Title and Description
+                template.WebSettings.Title = job.SiteTitle;
+                template.WebSettings.Description = job.Description;
+
+                // Apply the template to the target site
+                web.ApplyProvisioningTemplate(template, ptai);
+
+                // Save the template information in the target site
+                var info = new SiteTemplateInfo()
+                {
+                    TemplateProviderType = job.TemplatesProviderTypeName,
+                    TemplateUri = job.ProvisioningTemplateUrl,
+                    TemplateParameters = template.Parameters,
+                    AppliedOn = DateTime.Now,
+                };
+                var jsonInfo = JsonConvert.SerializeObject(info);
+                web.SetPropertyBagValue(PnPPartnerPackConstants.PropertyBag_TemplateInfo, jsonInfo);
+
+                // Set site policy template
+                if (!String.IsNullOrEmpty(job.SitePolicy))
+                {
+                    web.ApplySitePolicy(job.SitePolicy);
+                }
+
+                // Apply Tenant Branding, if requested
+                if (job.ApplyTenantBranding)
+                {
+                    var brandingSettings = PnPPartnerPackUtilities.GetTenantBrandingSettings();
+
+                    using (var repositoryContext = PnPPartnerPackContextProvider.GetAppOnlyClientContext(
+                        PnPPartnerPackSettings.InfrastructureSiteUrl))
+                    {
+                        var brandingTemplate = BrandingJobHandler.PrepareBrandingTemplate(repositoryContext, brandingSettings);
+
+                        // Fixup Title and Description
+                        brandingTemplate.WebSettings.Title = job.SiteTitle;
+                        brandingTemplate.WebSettings.Description = job.Description;
+
+                        BrandingJobHandler.ApplyBrandingOnWeb(web, brandingSettings, brandingTemplate);
+                    }
+                }
+
+
+                Console.WriteLine("Applyed Provisioning Template \"{0}\" to site.",
+                    job.ProvisioningTemplateUrl);
             }
         }
 

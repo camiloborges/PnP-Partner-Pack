@@ -37,13 +37,10 @@ param
     [Parameter(Mandatory = $false, HelpMessage="Add http://localhost:44300 as reply Url if it is true.")]
     $LocalDebug = $false
 )
-
 write-host "Create-AzureADApplication.ps1 -ApplicationServiceName $ApplicationServiceName -ApplicationServiceName $ApplicationServiceName -ApplicationIdentifierUri $ApplicationIdentifierUri -AppServiceTier $AppServiceTier" -ForegroundColor Yellow
 
 function SetKeys
 {
-   
-
     $enc = [System.Text.Encoding]::ASCII
     $KeyIdentifier = "pnppartnerpack"
     Get-AzureADApplicationKeyCredential -ObjectId $app.ObjectId | 
@@ -51,15 +48,14 @@ function SetKeys
                                         $null -ne $_.CustomKeyIdentifier -and $enc.GetString($_.CustomKeyIdentifier) -eq $KeyCredentials.customKeyIdentifier 
                                     }| ForEach-Object {
                                         $key = $_
-                                       Remove-AzureADApplicationKeyCredential -ObjectId $app.ObjectId -KeyId $key.KeyId
-                                       Sleep -Seconds 2
+                                        Remove-AzureADApplicationKeyCredential -ObjectId $app.ObjectId -KeyId $key.KeyId
+                                        Sleep -Seconds 2
                                     }
     New-AzureADApplicationKeyCredential -ObjectId $app.ObjectId `
                                     -CustomKeyIdentifier $KeyCredentials.customKeyIdentifier `
                                     -StartDate (Get-DAte).ToUniversalTime() `
                                     -EndDate (get-Date).AddYears(2) -Usage Verify `
                                     -Value $KeyCredentials.value -Type AsymmetricX509Cert |Out-Null
-    
     Sleep -Seconds 2
     Get-AzureADApplicationPasswordCredential -ObjectId $app.ObjectId | 
                                     Where-Object { 
@@ -69,22 +65,20 @@ function SetKeys
                                         Remove-AzureADApplicationPasswordCredential -ObjectId $app.ObjectId -KeyId $passwordCredential.KeyId
                                         Sleep -Seconds 2
                                     }
-    
-
     $passwordCredential = New-AzureADApplicationPasswordCredential -ObjectId $app.ObjectId -CustomKeyIdentifier $keyIdentifier 
     return $passwordCredential.Value                                    
-
 }
+
 function SetServicePrincipal
 {
     if($null -eq (GEt-AzureRmADServicePrincipal -SearchString $app.DisplayName)){
         Sleep -Seconds 20 
         New-AzureRmADServicePrincipal -ApplicationId $app.ApplicationId |Out-Null 
-
         Sleep -Seconds 5
         New-AzureRmRoleAssignment -RoleDefinitionName Reader -ServicePrincipalName $app.ApplicationId |Out-Null
     }
 }
+
 $homepage = "https://$ApplicationServiceName.azurewebsites.net/".ToLower()
 $app = ((Get-AzureRmADApplication) | Where-Object { $_.IdentifierUris -contains $ApplicationIdentifierUri.ToString()} )
 if($null -eq $app){
@@ -93,12 +87,14 @@ if($null -eq $app){
 
 $clientSecret = SetKeys
 $replyUrls = @($homepage.ToLower())
-$replyUrls += "https://localhost:44300/" 
+if($LocalDebug){
+    $replyUrls += "https://localhost:44300/" 
+}
 Set-AzureRmADApplication -ObjectId $app.ObjectId  -ReplyUrls $replyUrls
-
 SetServicePrincipal
+
 return @{
-ClientSecret = $clientSecret 
-AADApp = $app
+    ClientSecret = $clientSecret 
+    AADApp = $app
 
 }

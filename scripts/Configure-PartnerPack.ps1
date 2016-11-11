@@ -24,19 +24,36 @@ param (
     [Parameter(Mandatory = $false, HelpMessage="Configuration Script. This holds all the parameters required by the solution.")]
     $config = (./config.ps1 )
 )
-function Init-Session
+
+#region helpers (should probably be on its own file?)
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+function SelectAzureSubscription
 {
-    write-host "Authenticating using 3 different methods, Add-AzureAccount, Connect-AzureAD and Login-AzureRMAccount" -ForegroundColor Yellow
-    $cred = New-Object System.Management.Automation.PSCredential($userName, $securePassword)
+    $subscriptions = Get-AzureRmSubscription | ForEach-Object{ $_.SubscriptionName} 
+    $config.SubscriptionName = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Subscription you'll use" -value $config.SubscriptionName -options $subscriptions)
+    select-azuresubscription -SubscriptionName $config.SubscriptionName | Out-Null
+    Select-AzureRmSubscription -SubscriptionName $config.SubscriptionName | Out-Null
+}
+function LoginAzure{
+    write-host "Authenticating using 2 different methods,  Connect-AzureAD and Login-AzureRMAccount" -ForegroundColor Yellow
+    $cred =  New-Object System.Management.Automation.PSCredential($userName, $securePassword)
     try{
         #performs authentication 
-        Add-AzureAccount -Credential $cred | Out-Null
         Connect-AzureAD -Credential $cred | Out-Null
         Login-AzureRmAccount -Credential $cred | Out-Null
     }catch {
-        write-error "Couldn't authenticate to Azure." -ForegroundColor red
+        write-error "Couldn't authenticate to Azure." 
         throw
     }
+}
+function SelectAzureLocation {
+    $locations = GEt-AzureRMLocation | ForEach-Object {$_.DisplayName}
+    $config.Location = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Location you'll are " -value $config.Location -options $locations)
+}
+function InitSession
+{
+    LoginAzure
     write-host "authenticated, now collecting some of the required values" -ForegroundColor Yellow
     #prepares $config property values
     #these properties are used throughout this script
@@ -46,20 +63,16 @@ function Init-Session
     }
     $tenantName = $config.Tenant.Substring(0,$config.Tenant.IndexOf("."))
     $config.InfrastructureSiteUrl ="https://$tenantName.sharepoint.com/sites/PnP-Partner-Pack-Infrastructure"
-    
-    $subscriptions = Get-AzureRmSubscription | ForEach-Object{ $_.SubscriptionName} 
-    $locations = GEt-AzureRMLocation | ForEach-Object {$_.DisplayName}
-    $config.SubscriptionName = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Subscription you'll use" -value $config.SubscriptionName -options $subscriptions)
-    $config.Location = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Location you'll are " -value $config.Location -options $locations)
-    $config.LocalDebug = [String]::IsNullOrEmpty( (Read-Host "Do you wish to debug this solution locally? [Enter] for yes, anything else for [no]")))
-    
-    while($null -eq (Get-AzureRmSubscription -SubscriptionName $config.SubscriptionName -ErrorAction SilentlyContinue))
-    {
-        write-host "couldn't find a subscription with the name you provided."
-        $config.SubscriptionName = (./Confirm-ParameterValue.ps1 -prompt "Confirm the Azure Subscription you'll deploy this to" -value $config.SubscriptionName)
-    }
 
-    select-azuresubscription -SubscriptionName $config.SubscriptionName
+    SelectAzureSubscription
+    SelectAzureLocation
+
+    $config.LocalDebug = [String]::IsNullOrEmpty( (Read-Host "Do you wish to debug this solution locally? [Enter] for yes, type anything for no"))
+}
+
+function CreateResourceGroup
+{
+    $config.ResourceGroupName = ./Create-ResourceGroup.ps1 -name $config.ResourceGroupName -Location $config.Location 
 }
 function CreateStorageAccount{
     $storage =  ./Create-StorageAccount.ps1 -Name $config.StorageAccountName `
@@ -142,6 +155,7 @@ function ConfigureConfigs
                                 -InfrastructureSiteUrl $config.InfrastructureSiteUrl `
                                 -UseApproval $config.UseApproval `
                                 -UsePostProcessing $config.UsePostProcessing
+
 }
 function BuildPackage
 {
@@ -156,6 +170,8 @@ function BuildPackage
 
 function DeployApplication
 {
+    .\Provision-GovernanceTimerJobs.ps1 -Location $config.Location -AzureWebSite $config.AppServiceName     |Out-null               
+
     if([String]::IsNullOrEmpty( (Read-Host "Do you wish to deploy the site provisioning solution now? [Enter] for yes, anything else to try and use an existing package")))
     {
         if([String]::IsNullOrEmpty( (Read-Host "Do you wish to build the package now? [Enter] for yes, anything else to try and use an existing package")))
@@ -176,11 +192,11 @@ function DeployApplication
     }
 }
 
-Add-Type -AssemblyName System.IO.Compression.FileSystem
+#endregion
 
-Init-Session
+InitSession
 
-$config.ResourceGroupName = ./Create-ResourceGroup.ps1 -name $config.ResourceGroupName -Location $config.Location 
+CreateResourceGroup
 
 CreateSelfSignedCertificate
 CreateStorageAccount 
@@ -190,10 +206,7 @@ CreateInfrastructureSiteCollection
 
 ConfigureConfigs
 
-.\Provision-GovernanceTimerJobs.ps1 -Location $config.Location -AzureWebSite $config.AppServiceName     |Out-null               
-
 DeployApplication
-
 
 write-host "Scripted configuration completed. You need to configure the required API permissions within Azure AD for Application $($config.AppServiceName) " -ForegroundColor Yellow
 write-host "You might need to see what was the final configuration values, so here you go." 

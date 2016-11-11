@@ -438,7 +438,8 @@ namespace OfficeDevPnP.PartnerPack.SiteProvisioning.Controllers
                 ProvisioningJobStatus.Pending | ProvisioningJobStatus.Running |
                 ProvisioningJobStatus.Provisioned | ProvisioningJobStatus.Failed |
                 ProvisioningJobStatus.Cancelled |
-                ProvisioningJobStatus.PostProcessing |
+                ProvisioningJobStatus.PostProvisioning|
+                ProvisioningJobStatus.RunningPostProvisioning |
                 ProvisioningJobStatus.WaitingApproval,
                 ClaimsPrincipal.Current.Identity.Name);
 

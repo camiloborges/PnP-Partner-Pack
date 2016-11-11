@@ -100,7 +100,7 @@ namespace OfficeDevPnP.PartnerPack.SiteProvisioning.Controllers
                 ProvisioningJobStatus.Failed |
                 ProvisioningJobStatus.WaitingApproval |
                 ProvisioningJobStatus.Failed |
-                ProvisioningJobStatus.PostProcessing, typeof(RefreshSitesJob).FullName, 
+                ProvisioningJobStatus.PostProvisioning | ProvisioningJobStatus.RunningPostProvisioning , typeof(RefreshSitesJob).FullName, 
                 false);
 
             if (runningJobs != null && runningJobs.Length > 0)
@@ -113,7 +113,11 @@ namespace OfficeDevPnP.PartnerPack.SiteProvisioning.Controllers
                 var refreshJobStatus = RefreshJobStatus.Idle;
                 if (lastStatus == ProvisioningJobStatus.Failed) {
                     refreshJobStatus = RefreshJobStatus.Failed;
-                } else if (lastStatus == (ProvisioningJobStatus.Running | ProvisioningJobStatus.Pending| ProvisioningJobStatus.PostProcessing | ProvisioningJobStatus.WaitingApproval)) {
+                } else if (lastStatus == (  ProvisioningJobStatus.Running | 
+                                            ProvisioningJobStatus.Pending| 
+                                            ProvisioningJobStatus.PostProvisioning|
+                                            ProvisioningJobStatus.RunningPostProvisioning |
+                                            ProvisioningJobStatus.WaitingApproval)) {
                     refreshJobStatus = RefreshJobStatus.Running;
                 } 
 

@@ -36,7 +36,7 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs.Handlers
         {
             try
             {
-                if(PnPPartnerPackSettings.UseApproval && job.Status == ProvisioningJobStatus.WaitingApproval)
+                if(job.Status == ProvisioningJobStatus.WaitingApproval)
                 {
                     return; 
                 }
@@ -50,25 +50,24 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs.Handlers
 
                     // Run the Job
                     RunJobInternal(job);
-                   
-                }
 
-                if (PnPPartnerPackSettings.UsePostProcessing)
-                {
-                    // Set the Job status as Provisioned (i.e. Completed)
-                    ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
-                        job.JobId,
-                        ProvisioningJobStatus.PostProcessing,
-                        String.Empty);
+                    if (PnPPartnerPackSettings.UsePostProcessing)
+                    {
+                        // Set the Job status as Provisioned (i.e. Completed)
+                        ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
+                            job.JobId,
+                            ProvisioningJobStatus.PostProvisioning,
+                            String.Empty);
 
-                }
-                else
-                {
-                    // Set the Job status as Provisioned (i.e. Completed)
-                    ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
-                        job.JobId,
-                        ProvisioningJobStatus.Provisioned,
-                        String.Empty);
+                    }
+                    else
+                    {
+                        // Set the Job status as Provisioned (i.e. Completed)
+                        ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(
+                            job.JobId,
+                            ProvisioningJobStatus.Provisioned,
+                            String.Empty);
+                    }
                 }
             }
             catch (Exception ex)

@@ -56,7 +56,6 @@ param
     [Parameter(Mandatory = $true)]
     [String]
     $InfrastructureSiteUrl,
-
     [Parameter(Mandatory = $false)]
     [Boolean]
     $useApproval = $false,
@@ -72,7 +71,6 @@ $configFiles =  "OfficeDevPnP.PartnerPack.CheckAdminsJob\App.config",
                 "OfficeDevPnP.PartnerPack.ContinousJob\App.config",
                 "OfficeDevPnP.PartnerPack.ScheduledJob\App.config",
                 "OfficeDevPnP.PartnerPack.SiteProvisioning\Web.config"
-
 
 $azureWebJobsDashBoardNodeValue = "DefaultEndpointsProtocol=https;AccountName=$AzureStorageAccountName;AccountKey=$AzureStoragePrimaryAccessKey";
 

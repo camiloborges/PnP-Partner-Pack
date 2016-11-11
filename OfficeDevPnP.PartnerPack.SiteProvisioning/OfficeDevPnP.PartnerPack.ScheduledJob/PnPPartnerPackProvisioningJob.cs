@@ -18,6 +18,7 @@ namespace OfficeDevPnP.PartnerPack.ScheduledJob
         }
         private void ExecuteProvisioningJobs(object sender, TimerJobRunEventArgs e)
         {
+
             Console.WriteLine("Starting job");
 
             // Show the current context

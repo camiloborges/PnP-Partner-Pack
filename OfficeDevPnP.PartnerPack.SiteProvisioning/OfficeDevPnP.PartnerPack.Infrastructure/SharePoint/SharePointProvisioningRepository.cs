@@ -462,13 +462,15 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.SharePoint
 
             foreach (var jobInfo in jobInfoList)
             {
-                jobs.Add((TJob)jobInfo.JobFile.FromJsonStream(jobInfo.Type));
+                var job = (TJob)jobInfo.JobFile.FromJsonStream(jobInfo.Type);
+                job.Status = jobInfo.Status;
+                jobs.Add(job);
             }
 
             return (jobs.ToArray());
         }
 
-        private static ProvisioningJobInformation PrepareJobInformationFromSharePoint(ClientContext context, ListItem jobItem, Boolean includeFileStream = false)
+        private static ProvisioningJobInformation   PrepareJobInformationFromSharePoint(ClientContext context, ListItem jobItem, Boolean includeFileStream = false)
         {
             ProvisioningJobInformation resultItem = new ProvisioningJobInformation();
             resultItem.JobId = Guid.Parse(((String)jobItem["FileLeafRef"]).Substring(0, ((String)jobItem["FileLeafRef"]).Length - 4));
