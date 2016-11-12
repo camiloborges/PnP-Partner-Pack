@@ -62,7 +62,7 @@ param
 
     [Parameter(Mandatory = $false)]
     [Boolean]
-    $usePostProcessing = $false
+    $usePostProvisioning = $false
 )
 # DO NOT MODIFY BELOW
 $basePath = "$(convert-path ..)\OfficeDevPnP.PartnerPack.SiteProvisioning"
@@ -105,7 +105,7 @@ foreach($configFile in $configFiles)
     }
     $tenantSettingsNode.infrastructureSiteUrl = $InfrastructureSiteUrl
     $tenantSettingsNode.useApproval = $useApproval.ToString().ToLower()
-    $tenantSettingsNode.usePostProcessing = $usePostProcessing.ToString().ToLower()
+    $tenantSettingsNode.usePostProvisioning= $usePostProvisioning.ToString().ToLower()
 
     $configDoc.Save("$basePath\$configFile")
 }

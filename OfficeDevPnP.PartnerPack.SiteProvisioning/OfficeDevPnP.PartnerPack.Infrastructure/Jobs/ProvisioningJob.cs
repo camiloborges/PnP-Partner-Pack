@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,6 +31,7 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs
         /// <summary>
         /// Defines the Status of the Provisioning Job
         /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
         public ProvisioningJobStatus Status { get; set; }
 
         /// <summary>

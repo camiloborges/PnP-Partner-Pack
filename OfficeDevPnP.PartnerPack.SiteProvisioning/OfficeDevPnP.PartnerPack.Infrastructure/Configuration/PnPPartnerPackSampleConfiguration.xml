@@ -25,7 +25,7 @@
   <pnp:TenantSettings
     tenant="sample.onmicrosoft.com"
     appOnlyCertificateThumbprint="3BF6BD842C011E9E387F34734037C90488DB929C"
-    infrastructureSiteUrl="https://sample.sharepoint.com/sites/PnP-Partner-Pack/" useApproval="true"  usePostProcessing="false" />
+    infrastructureSiteUrl="https://sample.sharepoint.com/sites/PnP-Partner-Pack/" useApproval="true"  usePostProvisioning="false" />
 
   <pnp:ProvisioningRepository
     name="SharePointProvisioningRepository"

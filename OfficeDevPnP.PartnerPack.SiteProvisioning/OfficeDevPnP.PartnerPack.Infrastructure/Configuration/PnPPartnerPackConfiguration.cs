@@ -268,7 +268,7 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Configuration {
 
         private bool useApprovalField = false;
 
-        private bool usePostProcessingField = false;
+        private bool usePostProvisioningField = false;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
@@ -318,15 +318,15 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Configuration {
 
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public bool usePostProcessing
+        public bool usePostProvisioning
         {
             get
             {
-                return this.usePostProcessingField;
+                return this.usePostProvisioningField;
             }
             set
             {
-                this.usePostProcessingField = value;
+                this.usePostProvisioningField = value;
             }
         }
     }

@@ -25,7 +25,7 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure
         private static String _tenant = _configuration.TenantSettings.tenant;
         private static String _infrastructureSiteUrl = _configuration.TenantSettings.infrastructureSiteUrl;
         private static bool _useApproval = _configuration.TenantSettings.useApproval;
-        private static bool _usePostProcessing = _configuration.TenantSettings.usePostProcessing;
+        private static bool _usePostProvisioning = _configuration.TenantSettings.usePostProvisioning;
 
         private static String _provisioningRepositoryType = _configuration.ProvisioningRepository.type;
 
@@ -183,11 +183,11 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure
         /// <summary>
         /// Defines if provisioning job status should be set to Post Processing after provisioning. If that is used then job needs to be set to Provisioned by 3rd party solution 
         /// </summary>
-        public static bool UsePostProcessing
+        public static bool UsePostProvisioning
         {
             get
             {
-                return (_usePostProcessing);
+                return (_usePostProvisioning);
             }
         }
 

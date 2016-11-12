@@ -51,7 +51,7 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.Jobs.Handlers
                     // Run the Job
                     RunJobInternal(job);
 
-                    if (PnPPartnerPackSettings.UsePostProcessing)
+                    if (PnPPartnerPackSettings.UsePostProvisioning)
                     {
                         // Set the Job status as Provisioned (i.e. Completed)
                         ProvisioningRepositoryFactory.Current.UpdateProvisioningJob(

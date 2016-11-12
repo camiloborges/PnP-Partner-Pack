@@ -154,7 +154,7 @@ function ConfigureConfigs
                                 -CertificateThumbprint $config.CertificateThumbprint `
                                 -InfrastructureSiteUrl $config.InfrastructureSiteUrl `
                                 -UseApproval $config.UseApproval `
-                                -UsePostProcessing $config.UsePostProcessing
+                                -usePostProvisioning $config.UsePostProcessing
 
 }
 function BuildPackage
@@ -170,8 +170,7 @@ function BuildPackage
 
 function DeployApplication
 {
-    .\Provision-GovernanceTimerJobs.ps1 -Location $config.Location -AzureWebSite $config.AppServiceName     |Out-null               
-
+ 
     if([String]::IsNullOrEmpty( (Read-Host "Do you wish to deploy the site provisioning solution now? [Enter] for yes, anything else to try and use an existing package")))
     {
         if([String]::IsNullOrEmpty( (Read-Host "Do you wish to build the package now? [Enter] for yes, anything else to try and use an existing package")))
@@ -190,6 +189,8 @@ function DeployApplication
         Restart-AzureWebsite -Name  $config.AppServiceName 
         Remove-Item "./tempSetParameters.xml" -Force -ErrorAction SilentlyContinue
     }
+    .\Provision-GovernanceTimerJobs.ps1 -Location $config.Location -AzureWebSite $config.AppServiceName     |Out-null               
+
 }
 
 #endregion
@@ -210,7 +211,7 @@ DeployApplication
 
 write-host "Scripted configuration completed. You need to configure the required API permissions within Azure AD for Application $($config.AppServiceName) " -ForegroundColor Yellow
 write-host "You might need to see what was the final configuration values, so here you go." 
-($config |ConvertTo-Json) | Out-File ".\config.json" -Append:$false -Force:$true
+($config |ConvertTo-Json) | Out-File (".\config{0}.json" -f (get-date).ToString("yyyyMMddhhmm")) -Append:$false -Force:$true
 
 write-host ($config |ConvertTo-Json) -ForegroundColor Cyan  
 

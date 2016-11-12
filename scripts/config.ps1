@@ -1,3 +1,11 @@
+param($configFile = $null)
+if($configFile -ne $null)
+{
+    write-host "Loading $configFile"
+    $configJson = get-content $configFile -raw
+    $Global:config = $configJson | ConvertFrom-Json
+    return $Global:config 
+}
 if($Global:config -eq $null )
 {
     $Global:config = @{
