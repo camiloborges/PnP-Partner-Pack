@@ -463,6 +463,10 @@ namespace OfficeDevPnP.PartnerPack.Infrastructure.SharePoint
             foreach (var jobInfo in jobInfoList)
             {
                 var job = (TJob)jobInfo.JobFile.FromJsonStream(jobInfo.Type);
+
+                // updating serialized object with values from list item
+                job.Status = jobInfo.Status;
+                job.Title = jobInfo.Title;
                 jobs.Add(job);
             }
 
